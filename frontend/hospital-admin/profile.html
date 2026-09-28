@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Hospital Admin Portal</title>
+<link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body data-page="profile" data-portal="hospital-admin">
+<div class="portal">
+  <div class="topbar">
+    <div class="brand">🏥 Hospital Admin Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle">AD</span> Admin ▾</div>
+  </div>
+  <div class="portal-body">
+    <div class="sidebar">
+      <div class="side-item active">🏥 Hospital Overview</div>
+      <div class="side-item">👨‍⚕️ Doctor Directory</div>
+      <div class="side-item">🏬 Department Management</div>
+      <div class="side-item">🛏️ Admission</div>
+      <div class="side-item">📜 Audit Log</div>
+    </div>
+    <div class="content">
+      <div style="font-weight:800;color:var(--text-heading);font-size:16px;">Hospital Performance Overview</div>
+
+      <div class="grid4">
+        <div class="stat-card"><div class="num">1,248</div><div class="label">Total Patients</div><div class="trend up">▲ 12%</div></div>
+        <div class="stat-card"><div class="num">48</div><div class="label">Total Doctors</div><div class="trend up">▲ 2%</div></div>
+        <div class="stat-card"><div class="num">348</div><div class="label">Total Admissions</div><div class="trend up">▲ 8%</div></div>
+        <div class="stat-card"><div class="num">4.8</div><div class="label">Average Stay</div><div class="trend up">▲ 15%</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="title">👨‍⚕️ Doctor Status Management</div><span class="pill-badge badge-neutral">Manage</span></div>
+          <table>
+            <tr><th>Doctor name</th><th>Specialty</th><th>Status</th><th>Action</th></tr>
+            <tr><td>Dr. Farhana Akter</td><td>Cardiology</td><td><span class="pill-badge badge-success">Active</span></td><td><a href="#" style="font-size:12px;color:var(--danger);font-weight:700;">Block</a></td></tr>
+            <tr><td>Dr. M. Hasan</td><td>Medicine</td><td><span class="pill-badge badge-success">Active</span></td><td><a href="#" style="font-size:12px;color:var(--danger);font-weight:700;">Block</a></td></tr>
+            <tr><td>Dr. Nazifa</td><td>Pediatrics</td><td><span class="pill-badge badge-success">Active</span></td><td><a href="#" style="font-size:12px;color:var(--danger);font-weight:700;">Block</a></td></tr>
+            <tr><td>Dr. S. Rahman</td><td>Orthopedics</td><td><span class="pill-badge badge-danger">Blocked</span></td><td><a href="#" style="font-size:12px;color:var(--success);font-weight:700;">Activate</a></td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="title">🏬 Department Staff Assignments</div></div>
+          <table>
+            <tr><th>Department</th><th>Doctors</th><th>Nurses</th><th>Staff</th></tr>
+            <tr><td>Cardiology</td><td>6</td><td>12</td><td>8</td></tr>
+            <tr><td>Medicine</td><td>10</td><td>20</td><td>12</td></tr>
+            <tr><td>Orthopedics</td><td>5</td><td>16</td><td>10</td></tr>
+            <tr><td>Pediatrics</td><td>15</td><td>10</td><td>8</td></tr>
+            <tr><td>Radiology</td><td>4</td><td>8</td><td>6</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="title">📜 Hospital Audit Log</div><span class="pill-badge badge-neutral">View All</span></div>
+        <table>
+          <tr><th>Date &amp; Time</th><th>User</th><th>Action</th><th>Details</th></tr>
+          <tr><td>10 Aug 2025, 12:15 PM</td><td>Admin</td><td>Updated doctor status</td><td>Dr. Naeem Jahan → Blocked</td></tr>
+          <tr><td>09 Aug 2025, 11:42 AM</td><td>Admin</td><td>Changed department assignment</td><td>Dr. Tahmina Sultana → Medicine</td></tr>
+          <tr><td>09 Aug 2025, 09:30 AM</td><td>System</td><td>New admission record</td><td>Patient ID: P-000178</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Patient Portal</title>
+<link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body data-page="profile" data-portal="patient">
+<div class="portal">
+  <div class="topbar">
+    <div class="brand">👤 Patient Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle">TR</span> Tahia Raisa ▾</div>
+  </div>
+  <div class="portal-body">
+    <div class="sidebar">
+      <div class="side-item">🏠 Dashboard</div>
+      <div class="side-item active">👤 Profile</div>
+      <div class="side-item">📋 Medical Records</div>
+      <div class="side-item">💊 Prescriptions</div>
+      <div class="side-item">🔒 Consent and Privacy</div>
+      <div class="side-item">🕒 Activity Log</div>
+    </div>
+    <div class="content">
+      <div class="grid2">
+        <div class="card" style="display:flex;gap:14px;align-items:center;">
+          <div class="avatar-circle" style="width:48px;height:48px;font-size:15px;background:var(--primary-light);" data-me="initials">TR</div>
+          <div>
+            <div style="font-weight:800;color:var(--text-heading);font-size:16px;">Welcome, <span data-me="name">Tahia Raisa</span></div>
+            <div style="font-size:12px;color:var(--text-body);"><span data-me="sub">Patient ID: P-000178</span></div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;gap:14px;align-items:center;">
+          <div class="icon-badge" style="background:var(--bg-soft);">❤️</div>
+          <div>
+            <div style="font-weight:800;color:var(--text-heading);font-size:15px;">Your Health, Your Control</div>
+            <div style="font-size:12px;color:var(--text-body);">Manage records, privacy and consent settings securely.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head">
+            <div class="title">📇 Personal Information</div>
+            <span class="pill-badge badge-neutral">Edit</span>
+          </div>
+          <div class="info-row"><span class="k">👤 Full name</span><span class="v" data-me="name">Rahim Ahmed</span></div>
+          <div class="info-row"><span class="k">✉️ Email</span><span class="v" data-me="email">rahim@email.com</span></div>
+          <div class="info-row"><span class="k">📞 Phone</span><span class="v" data-me="phone">+880 1712 345678</span></div>
+          <div class="info-row"><span class="k">⚧ Gender</span><span class="v" data-me="gender">Male</span></div>
+          <div class="info-row"><span class="k">🩸 Blood</span><span class="v">group B+</span></div>
+          <div class="info-row"><span class="k">📍 Address</span><span class="v">House 12, Road 5, Dhanmondi, Dhaka</span></div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <div class="card">
+            <div class="card-head"><div class="title">👁 Test Reports Visibility</div></div>
+            <div style="font-size:12px;color:var(--text-body);margin-bottom:10px;">Control who can see your uploaded test reports.</div>
+            <div class="toggle-group"><span class="on">Public</span><span>Private</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="title">🔑 Pending OTP Approval Requests</div></div>
+            <table>
+              <tr><th>Doctor</th><th>Purpose</th><th>Action</th></tr>
+              <tr><td>Dr. Farhana Akter</td><td>Access Private Records</td><td><span class="pill-badge badge-success">Approved</span></td></tr>
+              <tr><td>Dr. M. Hasan</td><td>View Test Reports</td><td><span class="pill-badge badge-danger">Rejected</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+</body>
+</html>

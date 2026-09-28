@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | System Admin Portal</title>
+<link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body data-page="profile" data-portal="system-admin">
+<div class="portal">
+  <div class="topbar">
+    <div class="brand">🛡️ System Admin Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle">AD</span> System Admin ▾</div>
+  </div>
+  <div class="portal-body">
+    <div class="sidebar">
+      <div class="side-item active">📊 System Metrics</div>
+      <div class="side-item">🔑 RBAC &amp; Users</div>
+      <div class="side-item">🏥 Connected Hospitals</div>
+      <div class="side-item">🛡️ Security Logs</div>
+      <div class="side-item">💾 DB Backups</div>
+    </div>
+    <div class="content">
+      <div style="font-weight:800;color:var(--text-heading);font-size:16px;">Hospital Performance Overview</div>
+
+      <div class="grid4">
+        <div class="stat-card"><div class="num">2,843</div><div class="label">Total Users</div><div class="trend up">▲ 12%</div></div>
+        <div class="stat-card"><div class="num">38</div><div class="label">Total Hospitals</div><div class="trend up">▲ 2%</div></div>
+        <div class="stat-card"><div class="num">18,492</div><div class="label">Total Records Accessed</div><div class="trend up">▲ 28%</div></div>
+        <div class="stat-card"><div class="num">99.98%</div><div class="label">System Uptime</div><div class="trend up">▲ .02%</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="title">📈 Platform Usage</div></div>
+          <div style="height:110px;display:flex;align-items:flex-end;gap:6px;padding:0 4px;">
+            <div style="flex:1;background:var(--primary-light);border-radius:6px 6px 0 0;height:40%;"></div>
+            <div style="flex:1;background:var(--primary-light);border-radius:6px 6px 0 0;height:55%;"></div>
+            <div style="flex:1;background:var(--primary-light);border-radius:6px 6px 0 0;height:35%;"></div>
+            <div style="flex:1;background:var(--primary);border-radius:6px 6px 0 0;height:70%;"></div>
+            <div style="flex:1;background:var(--primary-light);border-radius:6px 6px 0 0;height:50%;"></div>
+            <div style="flex:1;background:var(--primary);border-radius:6px 6px 0 0;height:85%;"></div>
+            <div style="flex:1;background:var(--primary-light);border-radius:6px 6px 0 0;height:60%;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-body);margin-top:6px;">Logins · Record access, last 7 days</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="title">💾 Manual Database Backup</div></div>
+          <p style="font-size:12px;color:var(--text-body);margin-top:0;">Create a backup of the entire system database manually.</p>
+          <button class="btn btn-primary btn-block">Backup Now</button>
+          <div style="font-size:11px;color:var(--text-body);margin-top:10px;">Last backup: 08 Aug 2025, 10:24 AM</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="title">🔑 Role-Based Access Control (RBAC)</div><span class="pill-badge badge-neutral">Manage Roles</span></div>
+          <table>
+            <tr><th>Role</th><th>Users</th><th>Permission</th></tr>
+            <tr><td>Super Admin</td><td>2</td><td>Full Access</td></tr>
+            <tr><td>Hospital Admin</td><td>12</td><td>Hospital Management</td></tr>
+            <tr><td>Doctor</td><td>48</td><td>Patient Records, Lab Orders</td></tr>
+            <tr><td>Nurse</td><td>62</td><td>Patient View, Lab Orders</td></tr>
+            <tr><td>Patient</td><td>24</td><td>Patient Registration</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="title">🚨 Emergency Access Audit Log</div><span class="pill-badge badge-neutral">View All</span></div>
+          <table>
+            <tr><th>Time</th><th>User</th><th>Patient ID</th><th>Reason</th></tr>
+            <tr><td>10 Aug 2025, 02:15 PM</td><td>Dr. Hasan</td><td>P-000125</td><td><span class="pill-badge badge-danger">Life Threatening</span></td></tr>
+            <tr><td>09 Aug 2025, 08:45 AM</td><td>Dr. Rahman</td><td>P-000873</td><td><span class="pill-badge badge-warning">Emergency</span></td></tr>
+            <tr><td>08 Aug 2025, 11:03 AM</td><td>Dr. Karim</td><td>P-000356</td><td><span class="pill-badge badge-warning">Emergency</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+</body>
+</html>

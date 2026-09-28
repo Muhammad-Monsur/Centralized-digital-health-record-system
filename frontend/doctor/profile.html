@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Doctor Portal</title>
+<link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body data-page="profile" data-portal="doctor">
+<div class="portal">
+  <div class="topbar">
+    <div class="brand">🩺 Doctor Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle">FA</span> Dr. Farhana Akter ▾</div>
+  </div>
+  <div class="portal-body">
+    <div class="sidebar">
+      <div class="side-item active">🔍 Patient Search</div>
+      <div class="side-item">💊 Prescription</div>
+      <div class="side-item">📋 Medical Reports</div>
+      <div class="side-item">🧪 Lab Reports</div>
+      <div class="side-item">🚨 Emergency Access</div>
+      <div class="side-item">🕒 Activity Log</div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-head"><div class="title">🔍 Search Patient By Unique ID</div></div>
+        <div style="display:flex; gap:10px;">
+          <input type="text" value="P-000178" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid var(--bg-soft);background:#F7F8FE;font-size:14px;">
+          <button class="btn btn-primary">Search</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card" style="display:flex;gap:14px;align-items:center;">
+          <div class="avatar-circle" style="width:44px;height:44px;font-size:14px;background:var(--primary-light);">TR</div>
+          <div style="flex:1;">
+            <div style="font-weight:800;color:var(--text-heading);">Tahia Raisa</div>
+            <div style="font-size:12px;color:var(--text-body);">Patient ID: P-000178 · 22 years · Male-B+</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+            <span class="pill-badge badge-success">Public records</span>
+            <span class="pill-badge badge-danger">🔒 Private records</span>
+          </div>
+        </div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:800;color:var(--text-heading);font-size:14px;">Private records</div>
+            <div style="font-size:12px;color:var(--text-body);">Access requires OTP-verified patient consent.</div>
+          </div>
+          <button class="btn btn-outline">Request for OTP</button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="title">📝 Diagnosis and Prescription Entry</div></div>
+          <div class="field"><label>Diagnosis</label><input type="text" placeholder="Enter diagnosis"></div>
+          <div class="row2">
+            <div class="field"><label>Medicine</label><input type="text" placeholder="e.g. NAPA 500mg"></div>
+            <div class="field"><label>How to take</label><input type="text" placeholder="e.g. 1 tablet, 3 time"></div>
+          </div>
+          <div class="field"><label>For</label><input type="text" placeholder="e.g. 5 days"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <a href="#" style="font-size:13px; color:var(--primary); font-weight:700;">+ Add Medication</a>
+            <button class="btn btn-primary">Save &amp; Submit</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="title" style="color:var(--danger);">🚨 Emergency Access Override</div></div>
+          <p style="font-size:12px;color:var(--text-body);margin-top:0;">Provide access to locked records in emergency situations. This action must be justified and logged.</p>
+          <div class="field"><label>Justification (required)</label><textarea rows="3" placeholder="Explain emergency situation"></textarea></div>
+          <button class="btn btn-danger btn-block">Override Access</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+</body>
+</html>
