@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDHRS - Consent & Privacy</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#E7F1F9;
+    color:#0D438B;
+}
+
+.app{
+    width:96%;
+    max-width:1450px;
+    min-height:94vh;
+    margin:3vh auto;
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(13,67,139,.12);
+}
+
+.topbar{
+    height:58px;
+    background:#0E588C;
+    color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 20px;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:bold;
+}
+
+.brand-icon{
+    width:30px;
+    height:30px;
+    background:white;
+    color:#0E588C;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.top-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.avatar{
+    width:28px;
+    height:28px;
+    background:white;
+    color:#0E588C;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:10px;
+}
+
+.layout{
+    display:flex;
+    min-height:calc(94vh - 58px);
+}
+
+.sidebar{
+    width:210px;
+    border-right:1px solid #D8E6F1;
+    padding:18px 10px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.nav a{
+    color:#0D438B;
+    text-decoration:none;
+    padding:11px 12px;
+    border-radius:7px;
+    font-size:13px;
+}
+
+.nav a:hover,
+.nav a.active{
+    background:#BEE3FF;
+    color:#1A2B99;
+}
+
+.main{
+    flex:1;
+    padding:20px;
+    background:#E7F1F9;
+}
+
+h1{
+    color:#1A2B99;
+    font-size:21px;
+}
+
+.subtitle{
+    color:#56718C;
+    font-size:11px;
+    margin:4px 0 14px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.card{
+    background:white;
+    border:1px solid #D8E6F1;
+    border-radius:9px;
+    padding:14px;
+}
+
+.card h3{
+    color:#1A2B99;
+    font-size:13px;
+    margin-bottom:12px;
+}
+
+.info{
+    background:#E7F1F9;
+    border:1px solid #D8E6F1;
+    padding:10px;
+    border-radius:7px;
+    font-size:10px;
+    margin-bottom:10px;
+}
+
+.permission{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid #E7F1F9;
+    font-size:10px;
+}
+
+.permission:last-child{
+    border-bottom:none;
+}
+
+.switch{
+    width:38px;
+    height:21px;
+    background:#0E588C;
+    border-radius:20px;
+    cursor:pointer;
+}
+
+.switch.off{
+    background:#B5C2CE;
+}
+
+.switch::after{
+    content:"";
+    display:block;
+    width:15px;
+    height:15px;
+    background:white;
+    border-radius:50%;
+    margin:3px;
+}
+
+.switch.on::after{
+    margin-left:20px;
+}
+
+.request{
+    padding:10px;
+    border:1px solid #D8E6F1;
+    border-radius:7px;
+    margin-bottom:8px;
+}
+
+.request-name{
+    color:#1A2B99;
+    font-weight:bold;
+    font-size:11px;
+}
+
+.request-text{
+    font-size:9px;
+    color:#56718C;
+    margin:5px 0;
+}
+
+.btn{
+    border:none;
+    padding:5px 9px;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:9px;
+}
+
+.approve{
+    background:#0E588C;
+    color:white;
+}
+
+.reject{
+    background:white;
+    border:1px solid #C66;
+    color:#A33;
+}
+
+.full{
+    grid-column:1/-1;
+}
+
+.table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:10px;
+}
+
+.table th{
+    color:#56718C;
+    text-align:left;
+    padding:8px;
+    border-bottom:1px solid #D8E6F1;
+}
+
+.table td{
+    padding:9px 8px;
+    border-bottom:1px solid #E7F1F9;
+}
+
+.badge{
+    background:#BEE3FF;
+    color:#0D438B;
+    padding:4px 7px;
+    border-radius:10px;
+    font-size:8px;
+}
+
+@media(max-width:800px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .full{
+        grid-column:auto;
+    }
+}
+
+@media(max-width:650px){
+    .layout{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+    }
+
+    .nav{
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="topbar">
+
+<div class="brand">
+<div class="brand-icon">♙</div>
+Patient Portal
+</div>
+
+<div class="top-right">
+🔔
+<div class="avatar">PT</div>
+Patient ▾
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<nav class="nav">
+
+<a href="patient-dashboard.html">⌂ &nbsp; Dashboard</a>
+
+<a href="patient-profile.html">♙ &nbsp; Profile</a>
+
+<a href="patient-medical-reports.html">▣ &nbsp; Medical Records</a>
+
+<a href="patient-prescription.html">♧ &nbsp; Prescriptions</a>
+
+<a class="active" href="patient-consent-privacy.html">
+◉ &nbsp; Consent & Privacy
+</a>
+
+<a href="patient-activity-log.html">◌ &nbsp; Activity Log</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<h1>Consent & Privacy</h1>
+
+<p class="subtitle">
+Choose who can see your health information.
+</p>
+
+
+<div class="grid">
+
+
+<!-- WHO CAN SEE -->
+
+<div class="card">
+
+<h3>◉ Who can see my records</h3>
+
+<div class="info">
+<b>Public</b> means authorized healthcare providers can open it.
+<br>
+<b>Private</b> means a doctor must ask you for an OTP first.
+</div>
+
+
+<div class="permission">
+<span>Test reports</span>
+
+<div class="switch on"
+onclick="toggleSwitch(this)">
+</div>
+
+</div>
+
+
+<div class="permission">
+<span>Prescriptions</span>
+
+<div class="switch on"
+onclick="toggleSwitch(this)">
+</div>
+
+</div>
+
+
+<div class="permission">
+<span>Diagnoses</span>
+
+<div class="switch off"
+onclick="toggleSwitch(this)">
+</div>
+
+</div>
+
+
+<div class="permission">
+<span>Imaging</span>
+
+<div class="switch off"
+onclick="toggleSwitch(this)">
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PENDING REQUEST -->
+
+<div class="card">
+
+<h3>◉ Pending requests</h3>
+
+<div class="request">
+
+<div class="request-name">
+Dr. Farhana Akter
+</div>
+
+<div class="request-text">
+Purpose: Access Private Records<br>
+Request time: 10 Aug 2025
+</div>
+
+<button class="btn approve"
+onclick="approve(this)">
+Approve
+</button>
+
+<button class="btn reject"
+onclick="reject(this)">
+Reject
+</button>
+
+</div>
+
+
+<div class="request">
+
+<div class="request-name">
+Dr. M. Hasan
+</div>
+
+<div class="request-text">
+Purpose: View Test Reports<br>
+Request time: 09 Aug 2025
+</div>
+
+<button class="btn approve"
+onclick="approve(this)">
+Approve
+</button>
+
+<button class="btn reject"
+onclick="reject(this)">
+Reject
+</button>
+
+</div>
+
+</div>
+
+
+<!-- EMERGENCY -->
+
+<div class="card">
+
+<h3>⚠ Emergency access alerts</h3>
+
+<p style="font-size:10px;color:#56718C;">
+Tell me when a doctor uses emergency access.
+</p>
+
+<div style="margin-top:12px;"
+class="switch on"
+onclick="toggleSwitch(this)">
+</div>
+
+</div>
+
+
+<!-- PAST -->
+
+<div class="card">
+
+<h3>▤ Past requests</h3>
+
+<div class="request">
+<div class="request-name">Dr. S. Rahman</div>
+<div class="request-text">
+Access Private Records
+</div>
+<span class="badge">Approved</span>
+</div>
+
+<div class="request">
+<div class="request-name">Dr. N. Jahan</div>
+<div class="request-text">
+View Test Reports
+</div>
+<span class="badge">Rejected</span>
+</div>
+
+</div>
+
+
+<!-- VIEWED -->
+
+<div class="card full">
+
+<h3>▤ Who has viewed my records</h3>
+
+<table class="table">
+
+<tr>
+<th>Who</th>
+<th>What they opened</th>
+<th>When</th>
+<th>How</th>
+</tr>
+
+<tr>
+<td>Dr. Farhana Akter</td>
+<td>Prescriptions</td>
+<td>10 Aug 2025</td>
+<td><span class="badge">Public access</span></td>
+</tr>
+
+<tr>
+<td>Dr. M. Hasan</td>
+<td>Test reports</td>
+<td>09 Aug 2025</td>
+<td><span class="badge">Approved by you</span></td>
+</tr>
+
+<tr>
+<td>Dr. Karim</td>
+<td>Emergency chest pain</td>
+<td>08 Aug 2025</td>
+<td><span class="badge">Emergency access</span></td>
+</tr>
+
+<tr>
+<td>Dr. S. Rahman</td>
+<td>Private records</td>
+<td>28 Jul 2025</td>
+<td><span class="badge">Approved by you</span></td>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+</div>
+
+
+<script>
+
+function toggleSwitch(element){
+
+    element.classList.toggle("off");
+    element.classList.toggle("on");
+
+}
+
+function approve(button){
+
+    button.parentElement.style.opacity=".5";
+    alert("Request approved.");
+
+}
+
+function reject(button){
+
+    button.parentElement.style.opacity=".5";
+    alert("Request rejected.");
+
+}
+
+</script>
+
+</body>
+</html>

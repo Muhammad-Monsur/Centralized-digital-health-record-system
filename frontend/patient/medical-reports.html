@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDHRS - Medical Records</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#E7F1F9;
+    color:#0D438B;
+}
+
+.app{
+    width:96%;
+    max-width:1450px;
+    min-height:94vh;
+    margin:3vh auto;
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(13,67,139,.12);
+}
+
+.topbar{
+    height:58px;
+    background:#0E588C;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+}
+
+.brand{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    font-weight:bold;
+}
+
+.brand-icon{
+    width:30px;
+    height:30px;
+    background:white;
+    color:#0E588C;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.top-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.avatar{
+    width:28px;
+    height:28px;
+    background:white;
+    color:#0E588C;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:bold;
+}
+
+.layout{
+    display:flex;
+    min-height:calc(94vh - 58px);
+}
+
+.sidebar{
+    width:210px;
+    border-right:1px solid #D8E6F1;
+    padding:18px 10px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.nav a{
+    color:#0D438B;
+    text-decoration:none;
+    padding:11px 12px;
+    border-radius:7px;
+    font-size:13px;
+}
+
+.nav a:hover,
+.nav a.active{
+    background:#BEE3FF;
+    color:#1A2B99;
+}
+
+.main{
+    flex:1;
+    padding:20px;
+    background:#E7F1F9;
+}
+
+h1{
+    color:#1A2B99;
+    font-size:21px;
+}
+
+.subtitle{
+    font-size:11px;
+    color:#56718C;
+    margin:4px 0 14px;
+}
+
+.record-card{
+    background:white;
+    border:1px solid #D8E6F1;
+    border-radius:9px;
+    padding:14px;
+}
+
+.toolbar{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:14px;
+}
+
+.search{
+    flex:1;
+    height:34px;
+    border:1px solid #D8E6F1;
+    border-radius:6px;
+    padding:0 10px;
+    outline:none;
+}
+
+.filter{
+    background:white;
+    border:1px solid #D8E6F1;
+    color:#56718C;
+    padding:7px 12px;
+    border-radius:15px;
+    font-size:10px;
+    cursor:pointer;
+}
+
+.filter.active{
+    background:#0E588C;
+    color:white;
+}
+
+.table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:10px;
+}
+
+.table th{
+    text-align:left;
+    color:#56718C;
+    font-weight:normal;
+    padding:10px 6px;
+    border-bottom:1px solid #D8E6F1;
+}
+
+.table td{
+    padding:11px 6px;
+    border-bottom:1px solid #E7F1F9;
+    color:#183A5A;
+}
+
+.tag{
+    display:inline-block;
+    padding:4px 7px;
+    border-radius:10px;
+    background:#BEE3FF;
+    color:#0D438B;
+    font-size:9px;
+}
+
+.view{
+    background:white;
+    color:#0E588C;
+    border:1px solid #0E588C;
+    padding:5px 10px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+@media(max-width:850px){
+    .table{
+        min-width:800px;
+    }
+
+    .record-card{
+        overflow-x:auto;
+    }
+}
+
+@media(max-width:650px){
+    .layout{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+    }
+
+    .nav{
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="topbar">
+
+<div class="brand">
+<div class="brand-icon">♙</div>
+Patient Portal
+</div>
+
+<div class="top-right">
+🔔
+<div class="avatar">PT</div>
+Patient ▾
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<nav class="nav">
+
+<a href="patient-dashboard.html">⌂ &nbsp; Dashboard</a>
+
+<a href="patient-profile.html">♙ &nbsp; Profile</a>
+
+<a class="active" href="patient-medical-reports.html">
+▣ &nbsp; Medical Records
+</a>
+
+<a href="patient-prescription.html">♧ &nbsp; Prescriptions</a>
+
+<a href="patient-consent-privacy.html">◉ &nbsp; Consent & Privacy</a>
+
+<a href="patient-activity-log.html">◌ &nbsp; Activity Log</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<h1>Medical Records</h1>
+
+<p class="subtitle">
+Every report and diagnosis added to your account.
+</p>
+
+
+<div class="record-card">
+
+<div class="toolbar">
+
+<input
+class="search"
+id="search"
+placeholder="⌕  Search records..."
+onkeyup="searchRecords()"
+>
+
+<button class="filter active" onclick="filterRecords('all',this)">
+All
+</button>
+
+<button class="filter" onclick="filterRecords('test',this)">
+Test report
+</button>
+
+<button class="filter" onclick="filterRecords('imaging',this)">
+Imaging
+</button>
+
+<button class="filter" onclick="filterRecords('diagnosis',this)">
+Diagnosis
+</button>
+
+</div>
+
+
+<table class="table">
+
+<thead>
+<tr>
+<th>Date</th>
+<th>Record</th>
+<th>Type</th>
+<th>Source</th>
+<th>Who can see it</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="records">
+
+<tr data-type="test">
+<td>10 Aug 2025</td>
+<td><b>Complete Blood Count</b><br>R-1042</td>
+<td><span class="tag">Test report</span></td>
+<td>Dhaka Central Lab</td>
+<td>Public</td>
+<td>
+<button class="view" onclick="viewRecord('Complete Blood Count')">
+◉ View
+</button>
+</td>
+</tr>
+
+
+<tr data-type="test">
+<td>02 Aug 2025</td>
+<td><b>Lipid Profile</b><br>R-1038</td>
+<td><span class="tag">Test report</span></td>
+<td>Riverside General Hospital</td>
+<td>Public</td>
+<td>
+<button class="view" onclick="viewRecord('Lipid Profile')">
+◉ View
+</button>
+</td>
+</tr>
+
+
+<tr data-type="imaging">
+<td>21 Jul 2025</td>
+<td><b>Chest X-ray</b><br>R-1031</td>
+<td><span class="tag">Imaging</span></td>
+<td>Riverside General Hospital</td>
+<td>Private</td>
+<td>
+<button class="view" onclick="viewRecord('Chest X-ray')">
+◉ View
+</button>
+</td>
+</tr>
+
+
+<tr data-type="diagnosis">
+<td>14 Jul 2025</td>
+<td><b>Seasonal Influenza</b><br>R-1027</td>
+<td><span class="tag">Diagnosis</span></td>
+<td>Dr. M. Hasan</td>
+<td>Private</td>
+<td>
+<button class="view" onclick="viewRecord('Seasonal Influenza')">
+◉ View
+</button>
+</td>
+</tr>
+
+
+<tr data-type="test">
+<td>30 Jun 2025</td>
+<td><b>HbA1c</b><br>R-1018</td>
+<td><span class="tag">Test report</span></td>
+<td>Dhaka Central Lab</td>
+<td>Private</td>
+<td>
+<button class="view" onclick="viewRecord('HbA1c')">
+◉ View
+</button>
+</td>
+</tr>
+
+
+<tr data-type="test">
+<td>12 May 2025</td>
+<td><b>ECG</b><br>R-1008</td>
+<td><span class="tag">Test report</span></td>
+<td>Dr. Farhana Akter</td>
+<td>Public</td>
+<td>
+<button class="view" onclick="viewRecord('ECG')">
+◉ View
+</button>
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</main>
+
+</div>
+</div>
+
+
+<script>
+
+function viewRecord(name){
+    alert(name + " opened.");
+}
+
+function searchRecords(){
+
+    let value=document.getElementById("search").value.toLowerCase();
+
+    document.querySelectorAll("#records tr").forEach(row=>{
+
+        row.style.display=
+        row.innerText.toLowerCase().includes(value)
+        ? ""
+        : "none";
+
+    });
+
+}
+
+function filterRecords(type,button){
+
+    document.querySelectorAll(".filter")
+    .forEach(btn=>btn.classList.remove("active"));
+
+    button.classList.add("active");
+
+    document.querySelectorAll("#records tr").forEach(row=>{
+
+        row.style.display=
+        type==="all" || row.dataset.type===type
+        ? ""
+        : "none";
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>

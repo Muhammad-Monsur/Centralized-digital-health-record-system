@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDHRS - Activity Log</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#E7F1F9;
+    color:#0D438B;
+}
+
+.app{
+    width:96%;
+    max-width:1450px;
+    min-height:94vh;
+    margin:3vh auto;
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(13,67,139,.12);
+}
+
+.topbar{
+    height:58px;
+    background:#0E588C;
+    color:white;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 20px;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:bold;
+}
+
+.brand-icon{
+    width:30px;
+    height:30px;
+    background:white;
+    color:#0E588C;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.top-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.avatar{
+    width:28px;
+    height:28px;
+    background:white;
+    color:#0E588C;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:10px;
+}
+
+.layout{
+    display:flex;
+    min-height:calc(94vh - 58px);
+}
+
+.sidebar{
+    width:210px;
+    border-right:1px solid #D8E6F1;
+    padding:18px 10px;
+}
+
+.nav{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.nav a{
+    text-decoration:none;
+    color:#0D438B;
+    padding:11px 12px;
+    border-radius:7px;
+    font-size:13px;
+}
+
+.nav a:hover,
+.nav a.active{
+    background:#BEE3FF;
+    color:#1A2B99;
+}
+
+.main{
+    flex:1;
+    padding:20px;
+    background:#E7F1F9;
+}
+
+.heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:end;
+    margin-bottom:14px;
+}
+
+h1{
+    color:#1A2B99;
+    font-size:21px;
+}
+
+.subtitle{
+    color:#56718C;
+    font-size:11px;
+    margin-top:4px;
+}
+
+.filters{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.search{
+    flex:1;
+    height:34px;
+    border:1px solid #D8E6F1;
+    border-radius:6px;
+    padding:0 10px;
+    outline:none;
+}
+
+.filter{
+    background:white;
+    border:1px solid #D8E6F1;
+    color:#56718C;
+    padding:7px 12px;
+    border-radius:15px;
+    font-size:10px;
+    cursor:pointer;
+}
+
+.filter.active{
+    background:#0E588C;
+    color:white;
+}
+
+.log-card{
+    background:white;
+    border:1px solid #D8E6F1;
+    border-radius:9px;
+    padding:5px 14px;
+}
+
+.activity{
+    display:grid;
+    grid-template-columns:120px 1fr 150px 100px;
+    gap:12px;
+    align-items:center;
+    padding:13px 5px;
+    border-bottom:1px solid #E7F1F9;
+    font-size:10px;
+}
+
+.activity:last-child{
+    border-bottom:none;
+}
+
+.date{
+    color:#56718C;
+}
+
+.event{
+    color:#183A5A;
+}
+
+.event b{
+    display:block;
+    color:#1A2B99;
+    margin-bottom:3px;
+}
+
+.actor{
+    color:#56718C;
+}
+
+.badge{
+    display:inline-block;
+    background:#BEE3FF;
+    color:#0D438B;
+    padding:4px 7px;
+    border-radius:10px;
+    font-size:8px;
+}
+
+@media(max-width:800px){
+
+    .activity{
+        grid-template-columns:1fr;
+        gap:5px;
+    }
+
+}
+
+@media(max-width:650px){
+
+    .layout{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+    }
+
+    .nav{
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .filters{
+        flex-wrap:wrap;
+    }
+
+    .search{
+        flex-basis:100%;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="topbar">
+
+<div class="brand">
+<div class="brand-icon">♙</div>
+Patient Portal
+</div>
+
+<div class="top-right">
+🔔
+<div class="avatar">PT</div>
+Patient ▾
+</div>
+
+</header>
+
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<nav class="nav">
+
+<a href="patient-dashboard.html">
+⌂ &nbsp; Dashboard
+</a>
+
+<a href="patient-profile.html">
+♙ &nbsp; Profile
+</a>
+
+<a href="patient-medical-reports.html">
+▣ &nbsp; Medical Records
+</a>
+
+<a href="patient-prescription.html">
+♧ &nbsp; Prescriptions
+</a>
+
+<a href="patient-consent-privacy.html">
+◉ &nbsp; Consent & Privacy
+</a>
+
+<a class="active" href="patient-activity-log.html">
+◌ &nbsp; Activity Log
+</a>
+
+</nav>
+
+</aside>
+
+
+<main class="main">
+
+<div class="heading">
+
+<div>
+
+<h1>Activity Log</h1>
+
+<p class="subtitle">
+Review recent activity on your health records.
+</p>
+
+</div>
+
+</div>
+
+
+<div class="filters">
+
+<input
+class="search"
+id="search"
+placeholder="⌕  Search activity..."
+onkeyup="searchActivity()"
+>
+
+<button class="filter active"
+onclick="filterActivity('all',this)">
+All
+</button>
+
+<button class="filter"
+onclick="filterActivity('record',this)">
+Records
+</button>
+
+<button class="filter"
+onclick="filterActivity('privacy',this)">
+Privacy
+</button>
+
+<button class="filter"
+onclick="filterActivity('prescription',this)">
+Prescription
+</button>
+
+</div>
+
+
+<div class="log-card">
+
+
+<div class="activity"
+data-type="record">
+
+<div class="date">
+10 Aug 2025<br>
+10:34 AM
+</div>
+
+<div class="event">
+<b>Medical record viewed</b>
+Complete Blood Count was viewed.
+</div>
+
+<div class="actor">
+Dr. Farhana Akter
+</div>
+
+<div>
+<span class="badge">Public access</span>
+</div>
+
+</div>
+
+
+<div class="activity"
+data-type="prescription">
+
+<div class="date">
+09 Aug 2025<br>
+04:20 PM
+</div>
+
+<div class="event">
+<b>Prescription viewed</b>
+Your prescription was accessed.
+</div>
+
+<div class="actor">
+Dr. M. Hasan
+</div>
+
+<div>
+<span class="badge">Approved</span>
+</div>
+
+</div>
+
+
+<div class="activity"
+data-type="privacy">
+
+<div class="date">
+08 Aug 2025<br>
+11:03 AM
+</div>
+
+<div class="event">
+<b>Privacy setting changed</b>
+Test report visibility was updated.
+</div>
+
+<div class="actor">
+You
+</div>
+
+<div>
+<span class="badge">Updated</span>
+</div>
+
+</div>
+
+
+<div class="activity"
+data-type="record">
+
+<div class="date">
+05 Aug 2025<br>
+02:10 PM
+</div>
+
+<div class="event">
+<b>Medical report uploaded</b>
+A new ECG report was added.
+</div>
+
+<div class="actor">
+Dhaka Central Lab
+</div>
+
+<div>
+<span class="badge">Uploaded</span>
+</div>
+
+</div>
+
+
+<div class="activity"
+data-type="privacy">
+
+<div class="date">
+28 Jul 2025<br>
+09:52 AM
+</div>
+
+<div class="event">
+<b>Doctor access approved</b>
+Private records access was approved.
+</div>
+
+<div class="actor">
+You
+</div>
+
+<div>
+<span class="badge">Approved</span>
+</div>
+
+</div>
+
+
+<div class="activity"
+data-type="prescription">
+
+<div class="date">
+14 Jul 2025<br>
+01:30 PM
+</div>
+
+<div class="event">
+<b>Prescription updated</b>
+Seasonal Influenza prescription was added.
+</div>
+
+<div class="actor">
+Dr. M. Hasan
+</div>
+
+<div>
+<span class="badge">Updated</span>
+</div>
+
+</div>
+
+
+</div>
+
+</main>
+
+</div>
+</div>
+
+
+<script>
+
+function searchActivity(){
+
+let value=document
+.getElementById("search")
+.value
+.toLowerCase();
+
+document.querySelectorAll(".activity")
+.forEach(row=>{
+
+row.style.display=
+row.innerText
+.toLowerCase()
+.includes(value)
+? "grid"
+: "none";
+
+});
+
+}
+
+
+function filterActivity(type,button){
+
+document.querySelectorAll(".filter")
+.forEach(btn=>
+btn.classList.remove("active")
+);
+
+button.classList.add("active");
+
+document.querySelectorAll(".activity")
+.forEach(row=>{
+
+row.style.display=
+type==="all" ||
+row.dataset.type===type
+? "grid"
+: "none";
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
