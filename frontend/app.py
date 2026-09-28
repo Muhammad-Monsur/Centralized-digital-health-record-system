@@ -78,6 +78,7 @@ DEMO_USERS = [
     (1, "sysadmin@cdhrs.bd", "SysAdmin@12345", "system_admin", "System Admin", "", "", "", ""),
     (2, "admin@cdhrs.bd", "Admin@12345", "hospital_admin", "Hospital Admin", "", "", "", "Dhaka Medical Center"),
     (3, "dr.farhana@cdhrs.bd", "Doctor@12345", "doctor", "Dr. Farhana Akter", "+880 1711 000003", "Female", "", "Cardiology"),
+    (4, "dr.nazmoon@cdhrs.bd", "Doctor@12345", "doctor", "Dr. Nazmoon Nahar Suzana", "", "", "", ""),
     (178, "rahim@email.com", "Patient@12345", "patient", "Rahim Ahmed", "+880 1712 345678", "Male", "2003-12-18", ""),
 ]
 
@@ -98,12 +99,14 @@ def init_db():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )"""
         )
-        if con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
-            for uid, email, pw, role, name, phone, gender, dob, extra in DEMO_USERS:
-                con.execute(
-                    "INSERT INTO users (id,email,password_hash,role,full_name,phone,gender,dob,extra) VALUES (?,?,?,?,?,?,?,?,?)",
-                    (uid, email, hash_password(pw), role, name, phone, gender, dob, extra),
-                )
+        # Add any demo account that is missing, so accounts added later also reach existing databases.
+        for uid, email, pw, role, name, phone, gender, dob, extra in DEMO_USERS:
+            if con.execute("SELECT 1 FROM users WHERE email=? OR id=?", (email, uid)).fetchone():
+                continue
+            con.execute(
+                "INSERT INTO users (id,email,password_hash,role,full_name,phone,gender,dob,extra) VALUES (?,?,?,?,?,?,?,?,?)",
+                (uid, email, hash_password(pw), role, name, phone, gender, dob, extra),
+            )
 
 
 init_db()
@@ -241,13 +244,20 @@ def me(request: Request):
     return public_user(row)
 
 
-# ------------------------------------------------- protected profile pages
-def make_guard(portal: str):
+# ------------------------------------------------- protected portal pages
+# Pages that need a signed-in user of that portal's role (everything except login).
+PROTECTED_PAGES = {portal: ["profile.html"] for portal in PORTAL_ROLE}
+PROTECTED_PAGES["doctor"] += [
+    "prescription.html", "medical-reports.html", "lab-reports.html", "emergency-access.html", "activity-log.html",
+]
+
+
+def make_guard(portal: str, page: str):
     def guard(request: Request):
         row = current_user(request)
         if not row or row["role"] != PORTAL_ROLE[portal]:
             return RedirectResponse(f"/{portal}/login.html", status_code=302)
-        resp = FileResponse(BASE_DIR / portal / "profile.html")
+        resp = FileResponse(BASE_DIR / portal / page)
         resp.headers["Cache-Control"] = "no-store"
         return resp
     return guard
@@ -261,7 +271,8 @@ def make_home(portal: str):
 
 # Guards/redirects are registered BEFORE the static mounts so they take priority.
 for _portal in PORTAL_ROLE:
-    app.add_api_route(f"/{_portal}/profile.html", make_guard(_portal), methods=["GET"], include_in_schema=False)
+    for _page in PROTECTED_PAGES[_portal]:
+        app.add_api_route(f"/{_portal}/{_page}", make_guard(_portal, _page), methods=["GET"], include_in_schema=False)
     app.add_api_route(f"/{_portal}", make_home(_portal), methods=["GET"], include_in_schema=False)
     app.add_api_route(f"/{_portal}/", make_home(_portal), methods=["GET"], include_in_schema=False)
 

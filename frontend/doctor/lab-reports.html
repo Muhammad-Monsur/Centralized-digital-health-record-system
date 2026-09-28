@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Doctor Lab Reports</title>
+<link rel="stylesheet" href="../shared/styles.css">
+<link rel="stylesheet" href="doctor.css">
+<style>
+.report-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,1fr);gap:20px;align-items:start;}
+.report-table{min-width:540px;}
+.report-table th{padding:11px 8px;}
+.report-table td{padding:12px 8px;}
+[data-report-detail] td .pill-badge{padding:2px 8px;font-size:10px;margin-left:4px;}
+@media(max-width:900px){.report-layout{grid-template-columns:minmax(0,1fr);}}
+</style>
+</head>
+<body data-page="lab-reports" data-portal="doctor">
+<div class="portal">
+  <header class="topbar">
+    <div class="brand">🩺 Doctor Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle">FA</span> Dr. Farhana Akter ▾</div>
+  </header>
+  <div class="portal-body">
+    <nav class="sidebar" aria-label="Doctor portal">
+      <a class="side-item" href="profile.html">🔍 Patient Search</a>
+      <a class="side-item" href="prescription.html">💊 Prescription</a>
+      <a class="side-item" href="medical-reports.html">📋 Medical Reports</a>
+      <a class="side-item active" href="lab-reports.html" aria-current="page">🧪 Lab Reports</a>
+      <a class="side-item" href="emergency-access.html">🚨 Emergency Access</a>
+      <a class="side-item" href="activity-log.html">🕒 Activity Log</a>
+    </nav>
+    <main class="content">
+      <div class="page-heading">
+        <div>
+          <h1 class="page-title">Lab Reports</h1>
+          <p>Check test results against reference ranges. Abnormal values are flagged.</p>
+        </div>
+        <span class="pill-badge badge-neutral">Read-only records</span>
+      </div>
+
+      <section class="card" aria-label="Find patient">
+        <div class="card-head"><div class="title">🔍 Find patient</div></div>
+        <form data-patient-search novalidate>
+          <div class="form-error" hidden></div>
+          <div class="search-row">
+            <input type="search" name="pid" aria-label="Patient ID" placeholder="Enter patient ID, e.g. P-000178">
+            <button class="btn btn-primary" type="submit">Search patient</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card patient-summary" aria-label="Selected patient">
+        <div class="avatar-circle" data-patient="initials">RA</div>
+        <div class="details">
+          <div class="name" data-patient="name">Rahim Ahmed</div>
+          <div class="meta" data-patient="meta">Patient ID: P-000178 · 22 years · Male · Blood group B+</div>
+        </div>
+        <div class="badges">
+          <span class="pill-badge badge-success">Public records</span>
+          <span class="pill-badge badge-danger" data-patient="access">🔒 Private records locked</span>
+        </div>
+      </section>
+
+      <div class="grid3">
+        <div class="stat-card"><div class="num" data-stat="lab">00</div><div class="label">Visible lab reports</div><div class="trend" data-stat="lab-latest"></div></div>
+        <div class="stat-card"><div class="num" data-stat="flagged" style="color:var(--danger);">00</div><div class="label">Abnormal results</div><div class="trend">High or low vs. reference</div></div>
+        <div class="stat-card"><div class="num" data-stat="total">00</div><div class="label">All visible records</div><div class="trend up" data-stat="locked"></div></div>
+      </div>
+
+      <div class="report-layout">
+        <section class="card">
+          <div class="card-head"><div class="title">🧪 Lab reports</div><span class="pill-badge badge-neutral" data-report-count></span></div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="search" aria-label="Search lab reports" placeholder="Search by test name or lab" data-report-search>
+          </div>
+          <div class="table-wrap">
+            <table class="report-table">
+              <thead><tr><th>Report</th><th>Date</th><th>Tests</th><th>Status</th><th></th></tr></thead>
+              <tbody data-report-rows></tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="card" aria-label="Selected lab report" data-report-detail></aside>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+<script src="doctor.js"></script>
+</body>
+</html>
