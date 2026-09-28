@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Portal Hub</title>
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  .hub{max-width:920px;margin:0 auto;padding:60px 20px;}
+  .hub h1{font-size:28px;margin-bottom:6px;}
+  .hub p{margin-bottom:34px;}
+  .portal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+  .portal-card{background:#fff;border-radius:20px;padding:22px;box-shadow:0 10px 30px -18px rgba(46,52,128,.35);}
+  .portal-card .tag{font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;}
+  .portal-card h3{margin:6px 0 10px;font-size:18px;}
+  .portal-card .links{display:flex;gap:10px;flex-wrap:wrap;}
+  .portal-card a.linkbtn{font-size:12px;font-weight:700;padding:8px 14px;border-radius:999px;background:var(--bg-soft);color:var(--primary-dark);}
+  @media(max-width:700px){.portal-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="hub">
+  <h1>CDHRS Portal Hub</h1>
+  <p>Every portal is a self-contained set of static pages sharing one design system (<code>shared/styles.css</code>). Nothing here overlaps or conflicts — this hub just links them together for review.</p>
+  <div class="portal-grid">
+    <div class="portal-card">
+      <div class="tag">Patient</div>
+      <h3>👤 Patient Portal</h3>
+      <div class="links">
+        <a class="linkbtn" href="patient/register.html">Register</a>
+        <a class="linkbtn" href="patient/login.html">Login</a>
+        <a class="linkbtn" href="patient/profile.html">Profile (design)</a>
+      </div>
+    </div>
+    <div class="portal-card">
+      <div class="tag">Doctor</div>
+      <h3>🩺 Doctor Portal</h3>
+      <div class="links">
+        <a class="linkbtn" href="doctor/login.html">Login</a>
+        <a class="linkbtn" href="doctor/profile.html">Profile (design)</a>
+      </div>
+    </div>
+    <div class="portal-card">
+      <div class="tag">Hospital Admin</div>
+      <h3>🏥 Hospital Admin Portal</h3>
+      <div class="links">
+        <a class="linkbtn" href="hospital-admin/login.html">Login</a>
+        <a class="linkbtn" href="hospital-admin/profile.html">Profile (design)</a>
+      </div>
+    </div>
+    <div class="portal-card">
+      <div class="tag">System Admin</div>
+      <h3>🛡️ System Admin Portal</h3>
+      <div class="links">
+        <a class="linkbtn" href="system-admin/login.html">Login</a>
+        <a class="linkbtn" href="system-admin/profile.html">Profile (design)</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
