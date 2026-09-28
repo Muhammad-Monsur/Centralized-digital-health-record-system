@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Doctor Prescriptions</title>
+<link rel="stylesheet" href="../shared/styles.css">
+<link rel="stylesheet" href="doctor.css">
+<style>
+.history-row{padding:14px 0;border-bottom:1px solid #F1F2FB;}
+.history-row:last-child{border-bottom:0;padding-bottom:0;}
+.history-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+.history-top strong{color:var(--text-heading);font-size:14px;}
+.history-meta{font-size:12px;color:var(--text-body);margin-top:4px;}
+.med-list{margin:10px 0 0;padding-left:18px;color:var(--text-heading);font-size:13px;line-height:1.8;}
+</style>
+</head>
+<body data-page="prescription" data-portal="doctor">
+<div class="portal">
+  <header class="topbar">
+    <div class="brand">🩺 Doctor Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle">FA</span> Dr. Farhana Akter ▾</div>
+  </header>
+  <div class="portal-body">
+    <nav class="sidebar" aria-label="Doctor portal">
+      <a class="side-item" href="profile.html">🔍 Patient Search</a>
+      <a class="side-item active" href="prescription.html" aria-current="page">💊 Prescription</a>
+      <a class="side-item" href="medical-reports.html">📋 Medical Reports</a>
+      <a class="side-item" href="lab-reports.html">🧪 Lab Reports</a>
+      <a class="side-item" href="emergency-access.html">🚨 Emergency Access</a>
+      <a class="side-item" href="activity-log.html">🕒 Activity Log</a>
+    </nav>
+    <main class="content">
+      <div class="page-heading">
+        <div>
+          <h1 class="page-title">Prescriptions</h1>
+          <p>Create and review prescriptions for the selected patient.</p>
+        </div>
+        <span class="pill-badge badge-neutral">Doctor workspace</span>
+      </div>
+
+      <section class="card" aria-label="Find patient">
+        <div class="card-head"><div class="title">🔍 Find patient</div></div>
+        <form data-patient-search novalidate>
+          <div class="form-error" hidden></div>
+          <div class="search-row">
+            <input type="search" name="pid" aria-label="Patient ID" placeholder="Enter patient ID, e.g. P-000178">
+            <button class="btn btn-primary" type="submit">Search patient</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card patient-summary" aria-label="Selected patient">
+        <div class="avatar-circle" data-patient="initials">RA</div>
+        <div class="details">
+          <div class="name" data-patient="name">Rahim Ahmed</div>
+          <div class="meta" data-patient="meta">Patient ID: P-000178 · 22 years · Male · Blood group B+</div>
+        </div>
+        <span class="pill-badge badge-success">Patient selected</span>
+      </section>
+
+      <div class="grid2">
+        <section class="card">
+          <div class="card-head"><div class="title">✍️ Write prescription</div><span class="pill-badge badge-neutral">Draft</span></div>
+          <p class="section-note">Prescription will be added to the selected patient's record.</p>
+          <form data-rx-form novalidate>
+            <div class="form-error" hidden></div>
+            <div class="notice" hidden></div>
+            <div class="field"><label for="diagnosis">Diagnosis</label><input id="diagnosis" name="diagnosis" type="text" placeholder="Enter diagnosis"></div>
+            <div data-med-rows>
+              <div class="med-row">
+                <button type="button" class="link-btn remove-med">✕ Remove</button>
+                <div class="row2">
+                  <div class="field"><label>Medicine</label><input name="medicine" type="text" aria-label="Medicine" placeholder="e.g. Paracetamol 500 mg"></div>
+                  <div class="field"><label>Dosage form</label><select name="form" aria-label="Dosage form"><option>Tablet</option><option>Capsule</option><option>Syrup</option><option>Injection</option><option>Other</option></select></div>
+                </div>
+                <div class="row2">
+                  <div class="field"><label>Dose and frequency</label><input name="dose" type="text" aria-label="Dose and frequency" placeholder="e.g. 1 tablet, 3 times daily"></div>
+                  <div class="field"><label>Duration</label><input name="duration" type="text" aria-label="Duration" placeholder="e.g. 5 days"></div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="link-btn" data-add-med style="margin-bottom:16px;">+ Add another medicine</button>
+            <div class="field"><label for="instructions">Additional instructions</label><textarea id="instructions" name="instructions" rows="3" placeholder="Advice for the patient"></textarea></div>
+            <div class="form-actions">
+              <span class="hint">Review all details before issuing.</span>
+              <button class="btn btn-primary" type="submit">Save prescription</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><div class="title">📄 Recent prescriptions</div><span class="pill-badge badge-neutral" data-rx-count>2 records</span></div>
+          <div data-rx-list></div>
+          <button class="btn btn-outline btn-block" type="button" data-rx-toggle style="margin-top:18px;" hidden>View prescription history</button>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+<script src="doctor.js"></script>
+</body>
+</html>

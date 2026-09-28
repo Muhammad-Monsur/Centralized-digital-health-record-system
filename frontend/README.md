@@ -28,7 +28,14 @@ cdhrs-frontend/
 │   └── profile.html        # design only — static data, not wired up yet
 ├── doctor/
 │   ├── login.html
-│   └── profile.html        # design only
+│   ├── profile.html        # patient search, OTP consent, quick prescription, emergency override
+│   ├── prescription.html
+│   ├── medical-reports.html
+│   ├── lab-reports.html
+│   ├── emergency-access.html
+│   ├── activity-log.html
+│   ├── doctor.css          # layout shared by the doctor pages
+│   └── doctor.js           # doctor page behaviour (sample patient data, saved in localStorage)
 ├── hospital-admin/
 │   ├── login.html
 │   └── profile.html        # design only
@@ -99,6 +106,7 @@ Each account only works on **its own portal's** login page.
 | System Admin | `/system-admin/login.html` | `sysadmin@cdhrs.bd` | `SysAdmin@12345` |
 | Hospital Admin | `/hospital-admin/login.html` | `admin@cdhrs.bd` | `Admin@12345` |
 | Doctor | `/doctor/login.html` | `dr.farhana@cdhrs.bd` | `Doctor@12345` |
+| Doctor | `/doctor/login.html` | `dr.nazmoon@cdhrs.bd` | `Doctor@12345` |
 | Patient | `/patient/login.html` | `rahim@email.com` | `Patient@12345` |
 
 Behaviour to expect:

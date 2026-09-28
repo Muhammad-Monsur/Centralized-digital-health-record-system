@@ -69,8 +69,8 @@
     });
   }
 
-  /* ---------- profile pages ---------- */
-  if (document.body.dataset.page === "profile") {
+  /* ---------- signed-in portal pages ---------- */
+  if (document.body.dataset.portal) {
     const portal = document.body.dataset.portal;
     const goLogin = () => (window.location.href = `/${portal}/login.html`);
 
