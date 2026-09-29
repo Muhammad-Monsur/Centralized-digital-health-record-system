@@ -1,11 +1,11 @@
 # CDHRS — Frontend (Portal-Separated Build)
 
-Centralized Digital Health Record System — static frontend for the Patient,
+Centralized Digital Health Record System static frontend for the Patient,
 Doctor, Hospital Admin and System Admin portals, built to match the approved
 Figma UI. **Login now works**: credentials are checked by the FastAPI server
 and you are redirected to your own portal's profile page. Profile pages are
 still design-only (static sample data, except your name/email/phone).
-Users are stored in a local SQLite file for now; MySQL (per the SRS) is next.
+Users are stored in a local SQLite file for now; MySQL is next.
 
 ---
 
