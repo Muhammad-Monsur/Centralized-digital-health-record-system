@@ -43,34 +43,19 @@ cdhrs-frontend/
     ├── login.html
     └── profile.html        # design only
 ```
-
-### Why it's split this way
-Each portal folder is **self-contained** — it only depends on `shared/styles.css`
-for its design tokens and components (colors, `.btn`, `.card`, `.pill-badge`,
-`.sidebar`, `.topbar`, etc.). No portal's HTML/CSS/JS reaches into another
-portal's files, and no class names or IDs collide between them.
-
-That means:
-- You (or another dev) can build/edit one portal without breaking the others.
-- The four portals can be **merged into one app later** (e.g. one React app,
-  or one FastAPI project with routers per portal) with no naming conflicts,
-  because they all already share the same design-token vocabulary.
-- Backend integration can be added portal-by-portal without touching the
-  others.
-
 ---
 
 ## 2. Running it in PyCharm
 
 1. Open the `cdhrs-frontend` folder as a PyCharm project.
-2. Create a virtual environment (PyCharm will usually prompt you):
+2. Create a virtual environment
    ```
    python -m venv venv
    ```
 3. Activate it and install dependencies:
    ```
    venv\Scripts\activate      (Windows)
-   source venv/bin/activate   (macOS/Linux)
+   
    pip install -r requirements.txt
    ```
 4. Run the server (Run/Debug config: Script = `uvicorn`, params below, or
@@ -137,7 +122,7 @@ demo passwords. Delete `cdhrs.db` to reset all users back to the demo set.
 - Public Landing Page (`index.html`): nav, hero, features, about, 4 steps, footer
 - Working login for all four portals + patient self-registration + sign-out
 - Server-side route protection for every profile page
-- All 4 profile/dashboard pages (static mock data, matches Figma)
+- All 4 profile/dashboard pages (static mock data)
 
 **Not built yet (planned next):**
 - FastAPI backend routes (`/api/...`) + MySQL models per the SRS ER diagram
