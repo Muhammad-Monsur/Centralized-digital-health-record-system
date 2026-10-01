@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Patient Registration</title>
+<link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body class="auth-page">
+<div class="auth-wrap"><div class="auth-shell">
+  <div class="auth-panel" style="justify-content:flex-start;align-items:center;padding-top:36px;">
+    <svg class="deco deco-leaf-tl" width="70" height="110" viewBox="0 0 40 70"><path d="M20 70 Q-2 40 20 0 Q42 40 20 70Z" fill="#fff" opacity=".22"/><path d="M20 70 L20 6" stroke="#fff" stroke-width="1.5" opacity=".35"/></svg><svg class="deco deco-leaf-br" width="70" height="110" viewBox="0 0 40 70"><path d="M20 70 Q-2 40 20 0 Q42 40 20 70Z" fill="#fff" opacity=".22"/><path d="M20 70 L20 6" stroke="#fff" stroke-width="1.5" opacity=".35"/></svg><svg class="deco deco-heart-1" width="22" height="20" viewBox="0 0 20 18"><path d="M10 18C3 12-2 6 3 2c3-2 7 0 7 4 0-4 4-6 7-4 5 4 0 10-7 16Z" fill="#fff" opacity=".55"/></svg><svg class="deco deco-heart-2" width="22" height="20" viewBox="0 0 20 18"><path d="M10 18C3 12-2 6 3 2c3-2 7 0 7 4 0-4 4-6 7-4 5 4 0 10-7 16Z" fill="#fff" opacity=".55"/></svg><svg class="deco deco-heart-3" width="22" height="20" viewBox="0 0 20 18"><path d="M10 18C3 12-2 6 3 2c3-2 7 0 7 4 0-4 4-6 7-4 5 4 0 10-7 16Z" fill="#fff" opacity=".55"/></svg>
+    <a href="../index.html" class="brand-pill" style="background:#1F2A80;">CDHRS</a>
+    <div style="align-self:flex-start;text-align:left;margin-top:8px;">
+      <h2 style="font-size:32px;max-width:300px;">Start your health record journey</h2>
+      <p style="margin:10px 0 0;font-weight:600;">Create your account once and carry every report with you</p>
+    </div>
+    <div style="margin-top:auto;"><svg width="230" height="230" viewBox="0 0 170 170" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="85" cy="166" rx="52" ry="5" fill="rgba(0,0,0,.08)"/>
+  <path d="M46 168 L46 112 Q46 86 85 86 Q124 86 124 112 L124 168 Z" fill="#fff"/>
+  <path d="M70 92 L85 118 L100 92 L96 88 L85 102 L74 88 Z" fill="#2E7BD6"/>
+  <path d="M58 98 Q50 124 64 132 Q76 138 76 124" stroke="#9FB0E6" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="76" cy="124" r="5" fill="#9FB0E6"/>
+  <circle cx="85" cy="60" r="29" fill="#FBC9A0"/>
+  <path d="M55 58 Q50 22 85 22 Q120 22 115 58 Q111 42 100 44 Q94 32 85 35 Q76 32 70 44 Q59 42 55 58Z" fill="#26304F"/>
+  <path d="M55 58 Q52 84 60 96 L64 70Z" fill="#26304F"/><path d="M115 58 Q118 84 110 96 L106 70Z" fill="#26304F"/>
+  <circle cx="75" cy="63" r="2.8" fill="#26304F"/><circle cx="95" cy="63" r="2.8" fill="#26304F"/>
+  <path d="M77 74 Q85 80 93 74" stroke="#26304F" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <circle cx="67" cy="69" r="4" fill="#F29C86" opacity=".6"/><circle cx="103" cy="69" r="4" fill="#F29C86" opacity=".6"/>
+  <g transform="translate(85,134)"><path d="M0 6 C-14 -8 -28 6 -14 20 C-8 26 0 32 0 32 C0 32 8 26 14 20 C28 6 14 -8 0 6Z" fill="#2B4FA0"/>
+  <rect x="-2.5" y="6" width="5" height="16" fill="#fff"/><rect x="-8" y="11.5" width="16" height="5" fill="#fff"/></g>
+  <ellipse cx="66" cy="150" rx="9" ry="6" fill="#FBC9A0"/><ellipse cx="104" cy="150" rx="9" ry="6" fill="#FBC9A0"/>
+</svg></div>
+  </div>
+  <div class="auth-form" style="padding:36px 40px;">
+    <h1>Create Account</h1>
+    <div class="sub">Join CDHRS as a patient</div>
+    <form method="post" data-auth="register" novalidate>
+      <div class="row2"><div class="field"><label>Full Name</label><input type="text" name="full_name" placeholder="Enter your full name" required></div>
+      <div class="field"><label>Date of Birth</label><input type="date" name="dob" required></div></div>
+      <div class="row2"><div class="field"><label>Email</label><input type="email" name="email" placeholder="Enter your email" required></div>
+      <div class="field"><label>Phone</label><input type="tel" name="phone" placeholder="+880 1XXX XXXXXX" required></div></div>
+      <div class="field"><label>Gender</label><select name="gender"><option>Select gender</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="row2"><div class="field"><label>Password</label><input type="password" name="password" placeholder="Create a password" required></div>
+      <div class="field"><label>Confirm Password</label><input type="password" name="confirm_password" placeholder="Re-enter password" required></div></div>
+      <label style="display:flex;gap:8px;font-size:12px;color:#2B4A9E;margin-bottom:16px;font-weight:600;"><input type="checkbox" name="terms" value="1"> I agree to the Terms of Service and Privacy Policy.</label>
+      <div class="form-error" hidden></div>
+      <button type="submit" class="btn btn-dark btn-block" style="font-size:18px;">Create Account</button>
+    </form>
+    <div class="footnote">Already have an account? <a href="login.html"><b>Sign in</b></a></div>
+  </div>
+</div></div>
+<script src="../shared/auth.js"></script>
+</body>
+</html>
