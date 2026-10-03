@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Doctor Portal</title>
+<link rel="stylesheet" href="../shared/styles.css">
+<link rel="stylesheet" href="doctor.css">
+</head>
+<body data-page="profile" data-portal="doctor">
+<div class="portal">
+  <header class="topbar">
+    <div class="brand">🩺 Doctor Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle">FA</span> Dr. Farhana Akter ▾</div>
+  </header>
+  <div class="portal-body">
+    <nav class="sidebar" aria-label="Doctor portal">
+      <a class="side-item active" href="profile.html" aria-current="page">🔍 Patient Search</a>
+      <a class="side-item" href="prescription.html">💊 Prescription</a>
+      <a class="side-item" href="medical-reports.html">📋 Medical Reports</a>
+      <a class="side-item" href="lab-reports.html">🧪 Lab Reports</a>
+      <a class="side-item" href="emergency-access.html">🚨 Emergency Access</a>
+      <a class="side-item" href="activity-log.html">🕒 Activity Log</a>
+    </nav>
+    <main class="content">
+      <section class="card" aria-label="Find patient">
+        <div class="card-head"><div class="title">🔍 Search Patient By Unique ID</div></div>
+        <form data-patient-search novalidate>
+          <div class="form-error" hidden></div>
+          <div class="search-row">
+            <input type="search" name="pid" aria-label="Patient ID" placeholder="Enter patient ID, e.g. P-000178">
+            <button class="btn btn-primary" type="submit">Search</button>
+          </div>
+        </form>
+      </section>
+
+      <div class="grid2">
+        <section class="card patient-summary" aria-label="Selected patient">
+          <div class="avatar-circle" data-patient="initials">RA</div>
+          <div class="details">
+            <div class="name" data-patient="name">Rahim Ahmed</div>
+            <div class="meta" data-patient="meta">Patient ID: P-000178 · 22 years · Male · Blood group B+</div>
+          </div>
+          <div class="badges">
+            <span class="pill-badge badge-success">Public records</span>
+            <span class="pill-badge badge-danger" data-patient="access">🔒 Private records locked</span>
+          </div>
+        </section>
+        <section class="card" data-otp aria-label="Private records">
+          <div class="card-head" style="margin-bottom:8px;">
+            <div>
+              <div class="title">🔒 Private records</div>
+              <div style="font-size:12px;color:var(--text-body);margin-top:4px;">Access requires OTP-verified patient consent.</div>
+            </div>
+            <button class="btn btn-outline btn-sm" type="button" data-otp-request>Request OTP</button>
+          </div>
+          <div class="form-error" hidden></div>
+          <div class="notice" hidden></div>
+          <div class="search-row" data-otp-box hidden>
+            <input type="text" inputmode="numeric" maxlength="6" aria-label="OTP code" placeholder="Enter 6-digit OTP">
+            <button class="btn btn-primary btn-sm" type="button" data-otp-verify>Verify</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section class="card">
+          <div class="card-head"><div class="title">📝 Diagnosis and Prescription Entry</div><a class="link-btn" href="prescription.html">All prescriptions →</a></div>
+          <form data-rx-form novalidate>
+            <div class="form-error" hidden></div>
+            <div class="notice" hidden></div>
+            <div class="field"><label for="diagnosis">Diagnosis</label><input id="diagnosis" name="diagnosis" type="text" placeholder="Enter diagnosis"></div>
+            <div data-med-rows>
+              <div class="med-row">
+                <button type="button" class="link-btn remove-med">✕ Remove</button>
+                <div class="row2">
+                  <div class="field"><label>Medicine</label><input name="medicine" type="text" aria-label="Medicine" placeholder="e.g. NAPA 500mg"></div>
+                  <div class="field"><label>How to take</label><input name="dose" type="text" aria-label="How to take" placeholder="e.g. 1 tablet, 3 times daily"></div>
+                </div>
+                <div class="field"><label>For</label><input name="duration" type="text" aria-label="Duration" placeholder="e.g. 5 days"></div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="link-btn" data-add-med>+ Add Medication</button>
+              <button class="btn btn-primary" type="submit">Save &amp; Submit</button>
+            </div>
+          </form>
+        </section>
+        <section class="card">
+          <div class="card-head"><div class="title" style="color:var(--danger);">🚨 Emergency Access Override</div></div>
+          <p style="font-size:12px;color:var(--text-body);margin-top:0;">Provide access to locked records in emergency situations. This action must be justified and logged.</p>
+          <form data-emergency-form novalidate>
+            <div class="form-error" hidden></div>
+            <div class="notice" hidden></div>
+            <div class="field"><label for="justification">Justification (required)</label><textarea id="justification" name="justification" rows="3" placeholder="Explain emergency situation"></textarea></div>
+            <button class="btn btn-danger btn-block" type="submit">Override Access</button>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+<script src="doctor.js"></script>
+</body>
+</html>
