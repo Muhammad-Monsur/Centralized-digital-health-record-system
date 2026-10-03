@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDHRS | Patient Portal</title>
+<link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body data-page="profile" data-portal="patient">
+<div class="portal">
+  <div class="topbar">
+    <div class="brand">👤 Patient Portal</div>
+    <div class="avatar-pill"><span class="avatar-circle" data-me="initials">··</span> <span data-me="name">Loading…</span> ▾</div>
+  </div>
+  <div class="portal-body">
+    <div class="sidebar">
+      <div class="side-item active" data-tab="dashboard">🏠 Dashboard</div>
+      <div class="side-item" data-tab="profile">👤 Profile</div>
+      <div class="side-item" data-tab="records">📋 Medical Records</div>
+      <div class="side-item" data-tab="prescriptions">💊 Prescriptions</div>
+      <div class="side-item" data-tab="consent">🔒 Consent and Privacy</div>
+      <div class="side-item" data-tab="activity">🕒 Activity Log</div>
+    </div>
+    <div class="content">
+
+      <section id="tab-dashboard" class="tab-panel active">
+        <div class="grid2">
+          <div class="card" style="display:flex;gap:14px;align-items:center;">
+            <div class="avatar-circle" style="width:48px;height:48px;font-size:15px;background:var(--primary-light);" data-me="initials">··</div>
+            <div>
+              <div style="font-weight:800;color:var(--text-heading);font-size:16px;">Welcome, <span data-me="name">—</span></div>
+              <div style="font-size:12px;color:var(--text-body);" data-me="sub">Patient ID: —</div>
+            </div>
+          </div>
+          <div class="card" style="display:flex;gap:14px;align-items:center;">
+            <div class="icon-badge" style="background:var(--bg-soft);">❤️</div>
+            <div>
+              <div style="font-weight:800;color:var(--text-heading);font-size:15px;">Your Health, Your Control</div>
+              <div style="font-size:12px;color:var(--text-body);">Manage records, privacy and consent settings securely.</div>
+            </div>
+          </div>
+        </div>
+        <div class="grid3">
+          <div class="stat-card"><div class="num" id="dashRecords">—</div><div class="label">Total Medical Records</div></div>
+          <div class="stat-card"><div class="num" id="dashPending">—</div><div class="label">Pending Access Requests</div></div>
+          <div class="stat-card"><div class="num" id="dashPrivate">—</div><div class="label">Test Report Visibility</div></div>
+        </div>
+      </section>
+
+      <section id="tab-profile" class="tab-panel">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-head">
+              <div class="title">📇 Personal Information</div>
+              <span id="editProfileBtn" class="pill-badge badge-neutral" style="cursor:pointer;">Edit</span>
+            </div>
+            <div class="info-row"><span class="k">👤 Full name</span><span class="v" id="pFullName">—</span></div>
+            <div class="info-row"><span class="k">✉️ Email</span><span class="v" id="pEmail">—</span></div>
+            <div class="info-row"><span class="k">📞 Phone</span><span class="v" id="pPhone">—</span></div>
+            <div class="info-row"><span class="k">⚧ Gender</span><span class="v" id="pGender">—</span></div>
+            <div class="info-row"><span class="k">🩸 Blood</span><span class="v" id="pBlood">—</span></div>
+            <div class="info-row"><span class="k">📍 Address</span><span class="v" id="pAddress">—</span></div>
+
+            <form id="editProfileForm" hidden style="margin-top:16px;border-top:1px solid #F1F2FB;padding-top:16px;">
+              <div class="row2">
+                <div class="field"><label>Full Name</label><input type="text" name="full_name"></div>
+                <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
+              </div>
+              <div class="row2">
+                <div class="field"><label>Gender</label><select name="gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+                <div class="field"><label>Blood Group</label><input type="text" name="blood_group" placeholder="e.g. B+"></div>
+              </div>
+              <div class="field"><label>Address</label><input type="text" name="address"></div>
+              <div id="editProfileMsg" class="form-error" hidden></div>
+              <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="title">👁 Test Reports Visibility</div></div>
+            <div style="font-size:12px;color:var(--text-body);margin-bottom:10px;">Control who can see your uploaded test reports and public medical records.</div>
+            <div class="toggle-group" data-visibility><span class="on" data-value="Public">Public</span><span data-value="Private">Private</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-records" class="tab-panel">
+        <div class="card">
+          <div class="card-head"><div class="title">📋 Medical Records</div></div>
+          <table><tr><th>Title</th><th>Type</th><th>Visibility</th><th>Date</th></tr><tbody id="recordsBody"><tr><td colspan="4" class="empty-row">Loading…</td></tr></tbody></table>
+        </div>
+        <form id="addRecordForm" class="card">
+          <div class="card-head"><div class="title">⬆️ Add a Record</div></div>
+          <div class="row2">
+            <div class="field"><label>Title</label><input type="text" name="title" placeholder="e.g. Complete blood count" required></div>
+            <div class="field"><label>Type</label><select name="information_type"><option value="record">Record</option><option value="lab_report">Lab Report</option><option value="prescription">Prescription</option></select></div>
+          </div>
+          <div class="field"><label>Details</label><textarea name="details" rows="2" placeholder="Notes about this record"></textarea></div>
+          <div class="field"><label>Visibility</label><select name="visibility"><option value="Public">Public</option><option value="Private">Private</option></select></div>
+          <div id="addRecordMsg" class="form-error" hidden></div>
+          <button type="submit" class="btn btn-primary btn-block">Add Record</button>
+        </form>
+      </section>
+
+      <section id="tab-prescriptions" class="tab-panel">
+        <div class="card">
+          <div class="card-head"><div class="title">💊 Prescriptions</div></div>
+          <table><tr><th>Title</th><th>Type</th><th>Visibility</th><th>Date</th></tr><tbody id="prescriptionsBody"><tr><td colspan="4" class="empty-row">Loading…</td></tr></tbody></table>
+        </div>
+      </section>
+
+      <section id="tab-consent" class="tab-panel">
+        <div class="card">
+          <div class="card-head"><div class="title">🔑 Pending Access Requests</div></div>
+          <p style="font-size:12px;color:var(--text-body);margin-top:0;">A doctor must request access and you must approve it with an OTP code before they can view your private records.</p>
+          <table><tr><th>Doctor</th><th>Purpose</th><th>Action</th></tr><tbody id="consentBody"><tr><td colspan="3" class="empty-row">Loading…</td></tr></tbody></table>
+        </div>
+      </section>
+
+      <section id="tab-activity" class="tab-panel">
+        <div class="card">
+          <div class="card-head"><div class="title">🕒 Activity Log</div></div>
+          <table><tr><th>Accessed By</th><th>Type</th><th>When</th></tr><tbody id="activityBody"><tr><td colspan="3" class="empty-row">Loading…</td></tr></tbody></table>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+<script src="../shared/auth.js"></script>
+</body>
+</html>
