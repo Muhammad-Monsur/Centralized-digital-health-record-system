@@ -31,7 +31,7 @@ def get_current_admin(user: models.User = Depends(require_role("hospital_admin")
 
 
 
-# create / list / block doctors (SRS 3.3.3 Hospital and User Management) 
+# create / list / status of doctors  
 
 @router.post("/doctors")
 def create_doctor(
@@ -66,3 +66,46 @@ def create_doctor(
     log_audit(db, user.id, "Hospital Admin created a doctor account", "doctor", doctor.id, doctor_user.email)
     return {"ok": True, "doctor_id": doctor.id, "email": doctor_user.email}
 
+
+@router.get("/doctors")
+def list_doctors(admin: models.HospitalAdminProfile = Depends(get_current_admin), db: Session = Depends(get_db)):
+    doctors = db.query(models.Doctor).filter(models.Doctor.hospital_id == admin.hospital_id).all()
+    return [
+        {
+            "id": d.id, "user_id": d.user_id, "full_name": d.user.full_name, "email": d.user.email,
+            "specialization": d.specialization, "status": d.verification_status,
+        }
+        for d in doctors
+    ]
+
+
+@router.patch("/doctors/{doctor_id}/status")
+def set_doctor_status(
+    doctor_id: int, status: str,
+    admin: models.HospitalAdminProfile = Depends(get_current_admin),
+    user: models.User = Depends(require_role("hospital_admin")),
+    db: Session = Depends(get_db),
+):
+    """Block or re-activate a doctor (SRS 3.3 'Doctor Status Management').
+    A blocked doctor's User.status is also set so login.py's role/status
+    check rejects them immediately."""
+    if status not in ("Active", "Blocked"):
+        raise HTTPException(400, "status must be 'Active' or 'Blocked'.")
+    doctor = db.query(models.Doctor).filter(models.Doctor.id == doctor_id, models.Doctor.hospital_id == admin.hospital_id).first()
+    if not doctor:
+        raise HTTPException(404, "Doctor not found at your hospital.")
+
+    doctor.verification_status = status
+    doctor.user.status = status
+    db.commit()
+    log_audit(db, user.id, f"Hospital Admin set doctor status to {status}", "doctor", doctor.id, doctor.user.email)
+    return {"ok": True, "status": status}
+
+
+# Dashboard overview
+
+@router.get("/overview")
+def overview(admin: models.HospitalAdminProfile = Depends(get_current_admin), db: Session = Depends(get_db)):
+    total_doctors = db.query(models.Doctor).filter(models.Doctor.hospital_id == admin.hospital_id).count()
+    total_patients = db.query(models.Patient).count()  # patients aren't tied to one hospital yet
+    return {"hospital_name": admin.hospital.name, "total_doctors": total_doctors, "total_patients": total_patients}
