@@ -61,3 +61,21 @@ def emergency_log(user: models.User = Depends(require_role("system_admin")), db:
         }
         for r in rows
     ]
+
+
+@router.post("/backup")
+def backup(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
+    
+    # this is dummy backup code for SQLite, In next configure a scheduled mysqldump for the MySQL database
+    note = "Backup logged (configure a scheduled mysqldump for the real MySQL database)."
+    if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+        src = Path(SQLALCHEMY_DATABASE_URL.replace("sqlite:///", ""))
+        if src.exists():
+            backups_dir = src.parent / "backups"
+            backups_dir.mkdir(exist_ok=True)
+            stamp = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            dest = backups_dir / f"cdhrs_backup_{stamp}.db"
+            shutil.copy(src, dest)
+            note = f"SQLite backup saved to {dest.name}"
+    log_audit(db, user.id, "Manual database backup triggered", details=note)
+    return {"ok": True, "message": note}
