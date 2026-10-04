@@ -33,3 +33,31 @@ def rbac(user: models.User = Depends(require_role("system_admin")), db: Session 
         )
         out.append({"role": role.name, "users": user_count, "permissions": ", ".join(p.name for p in perms)})
     return out
+
+
+@router.get("/hospitals")
+def hospitals(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
+    rows = db.query(models.Hospital).all()
+    return [{"id": h.id, "name": h.name, "status": h.status, "doctors": len(h.doctors)} for h in rows]
+
+
+@router.get("/audit-log")
+def audit_log(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
+    logs = db.query(models.AuditLog).order_by(models.AuditLog.timestamp.desc()).limit(100).all()
+    out = []
+    for log in logs:
+        actor = db.query(models.User).filter(models.User.id == log.user_id).first() if log.user_id else None
+        out.append({"timestamp": log.timestamp, "user": actor.full_name if actor else "System", "action": log.action, "details": log.details})
+    return out
+
+
+@router.get("/emergency-log")
+def emergency_log(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
+    rows = db.query(models.EmergencyAccess).order_by(models.EmergencyAccess.accessed_at.desc()).limit(100).all()
+    return [
+        {
+            "timestamp": r.accessed_at, "doctor": r.doctor.user.full_name,
+            "patient_id": r.patient.upi, "reason": r.reason,
+        }
+        for r in rows
+    ]
