@@ -78,4 +78,74 @@ class RolePermission(Base):
     permission = relationship("Permission")
 
 
+# patient base Tahia add korbe 
 
+
+
+# doctor base suzana add korbe
+
+# hospital admin profile base Abdullah add korbe
+
+class SystemAdminProfile(Base):
+    __tablename__ = "system_admins"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+
+    user = relationship("User", back_populates="system_admin_profile")
+
+
+# medical info base Tahia add korbe
+
+
+
+
+# Access request base suzana add korbe
+
+
+
+class OTPVerification(Base):
+   
+    __tablename__ = "otp_verifications"
+
+    id = Column(Integer, primary_key=True)
+    consent_id = Column(Integer, ForeignKey("consents.id"), nullable=False)
+    otp_hash = Column(String(255), nullable=False)
+    generated_at = Column(DateTime, default=now)
+    expires_at = Column(DateTime, nullable=False)
+    verified_at = Column(DateTime, nullable=True)
+
+
+
+# consent base Tahia add korbe
+
+
+
+
+
+# emergency access base suzana add korbe
+
+
+class AccessLog(Base):
+   
+    __tablename__ = "access_logs"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # who accessed it
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    access_type = Column(String(50), nullable=False)  # e.g. "viewed_public", "viewed_private", "emergency"
+    accessed_at = Column(DateTime, default=now)
+
+
+
+class AuditLog(Base):
+    
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    action = Column(String(150), nullable=False)
+    entity = Column(String(50), default="")
+    entity_id = Column(Integer, nullable=True)
+    details = Column(String(255), default="")
+    timestamp = Column(DateTime, default=now)
