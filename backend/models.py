@@ -94,8 +94,21 @@ class RolePermission(Base):
 
 
 
-# doctor base suzana add korbe
+# doctor base
+class Doctor(Base):
+    """Doctor-specific fields. One-to-one with User (role='doctor').
+    IMPORTANT (SRS 3.2 + 3.4.2): doctors do NOT self-register - a Hospital
+    Admin creates this row (see routers/hospital_admin.py)."""
+    __tablename__ = "doctors"
 
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    hospital_id = Column(Integer, ForeignKey("hospitals.id"), nullable=False)
+    specialization = Column(String(100), default="")
+    verification_status = Column(String(20), default="Active")  # Active | Blocked
+
+    user = relationship("User", back_populates="doctor_profile")
+    hospital = relationship("Hospital", back_populates="doctors")
 
 
 # hospital admin profile  table 
