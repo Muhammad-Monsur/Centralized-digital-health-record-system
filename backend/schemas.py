@@ -35,3 +35,22 @@ class UserOut(BaseModel):
     specialization: str = ""
 
 
+
+class DoctorCreateIn(BaseModel):
+    full_name: str
+    email: EmailStr
+    phone: str = ""
+    gender: str = ""
+    specialization: str = ""
+    temp_password: str
+
+
+class DoctorOut(BaseModel):
+    id: int
+    user_id: int
+    full_name: str
+    email: str
+    specialization: str
+    status: str
+
+
