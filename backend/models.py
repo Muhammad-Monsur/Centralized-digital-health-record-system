@@ -11,7 +11,19 @@ from .database import Base
 def now():
     return datetime.datetime.utcnow()
 
-# Abdullah hospital base add korbe 
+# hospital table  
+class Hospital(Base):
+    __tablename__ = "hospitals"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(150), nullable=False)
+    address = Column(String(255), default="")
+    phone = Column(String(30), default="")
+    status = Column(String(20), default="Active")  # Active / Suspended
+
+    doctors = relationship("Doctor", back_populates="hospital")
+    admins = relationship("HospitalAdminProfile", back_populates="hospital")
+
 
 
 class User(Base):
@@ -84,7 +96,20 @@ class RolePermission(Base):
 
 # doctor base suzana add korbe
 
-# hospital admin profile base Abdullah add korbe
+
+
+# hospital admin profile  table 
+class HospitalAdminProfile(Base):
+    __tablename__ = "hospital_admins"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    hospital_id = Column(Integer, ForeignKey("hospitals.id"), nullable=False)
+
+    user = relationship("User", back_populates="hospital_admin_profile")
+    hospital = relationship("Hospital", back_populates="admins")
+
+
 
 class SystemAdminProfile(Base):
     __tablename__ = "system_admins"
