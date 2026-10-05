@@ -5,102 +5,109 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CDHRS | Doctor Portal</title>
 <link rel="stylesheet" href="../shared/styles.css">
-<link rel="stylesheet" href="doctor.css">
 </head>
 <body data-page="profile" data-portal="doctor">
 <div class="portal">
-  <header class="topbar">
+  <div class="topbar">
     <div class="brand">🩺 Doctor Portal</div>
-    <div class="avatar-pill"><span class="avatar-circle">FA</span> Dr. Farhana Akter ▾</div>
-  </header>
+    <div class="avatar-pill"><span class="avatar-circle" data-me="initials">··</span> <span data-me="name">Loading…</span> ▾</div>
+  </div>
   <div class="portal-body">
-    <nav class="sidebar" aria-label="Doctor portal">
-      <a class="side-item active" href="profile.html" aria-current="page">🔍 Patient Search</a>
-      <a class="side-item" href="prescription.html">💊 Prescription</a>
-      <a class="side-item" href="medical-reports.html">📋 Medical Reports</a>
-      <a class="side-item" href="lab-reports.html">🧪 Lab Reports</a>
-      <a class="side-item" href="emergency-access.html">🚨 Emergency Access</a>
-      <a class="side-item" href="activity-log.html">🕒 Activity Log</a>
-    </nav>
-    <main class="content">
-      <section class="card" aria-label="Find patient">
-        <div class="card-head"><div class="title">🔍 Search Patient By Unique ID</div></div>
-        <form data-patient-search novalidate>
-          <div class="form-error" hidden></div>
-          <div class="search-row">
-            <input type="search" name="pid" aria-label="Patient ID" placeholder="Enter patient ID, e.g. P-000178">
-            <button class="btn btn-primary" type="submit">Search</button>
+    <div class="sidebar">
+      <div class="side-item active" data-tab="search">🔍 Patient Search</div>
+      <div class="side-item" data-tab="prescription">💊 Prescription</div>
+      <div class="side-item" data-tab="reports">📋 Medical Reports</div>
+      <div class="side-item" data-tab="lab">🧪 Lab Reports</div>
+      <div class="side-item" data-tab="emergency">🚨 Emergency Access</div>
+      <div class="side-item" data-tab="activity">🕒 Activity Log</div>
+    </div>
+    <div class="content">
+
+      <section id="tab-search" class="tab-panel active">
+        <form id="patientSearchForm" class="card">
+          <div class="card-head"><div class="title">🔍 Search Patient By Unique ID</div></div>
+          <div style="display:flex; gap:10px;">
+            <input id="searchUpi" type="text" placeholder="e.g. P-000178" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid var(--bg-soft);background:#F7F8FE;font-size:14px;">
+            <button type="submit" class="btn btn-primary">Search</button>
           </div>
+        </form>
+        <div id="patientSearchResult" class="grid2" hidden>
+          <div class="card" style="display:flex;gap:14px;align-items:center;">
+            <div class="avatar-circle" style="width:44px;height:44px;font-size:14px;background:var(--primary-light);">👤</div>
+            <div style="flex:1;">
+              <div id="foundName" style="font-weight:800;color:var(--text-heading);"></div>
+              <div id="foundMeta" style="font-size:12px;color:var(--text-body);"></div>
+              <div style="font-size:11px;color:var(--text-body);margin-top:4px;">Public records: <span id="foundPublic"></span></div>
+            </div>
+          </div>
+          <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:800;color:var(--text-heading);font-size:14px;">Private records</div>
+              <div id="foundPrivateStatus" style="font-size:12px;color:var(--text-body);">Access requires OTP-verified patient consent.</div>
+            </div>
+            <button type="button" id="requestAccessBtn" class="btn btn-outline">Request for OTP</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-prescription" class="tab-panel">
+        <form id="prescriptionForm" class="card">
+          <div class="card-head"><div class="title">📝 Diagnosis and Prescription Entry</div></div>
+          <div class="field"><label>Patient ID</label><input type="text" name="patient_upi" class="patient-context-input" placeholder="e.g. P-000178" required></div>
+          <div class="field"><label>Diagnosis</label><input type="text" name="diagnosis" placeholder="Enter diagnosis" required></div>
+          <div class="row2">
+            <div class="field"><label>Medicine</label><input type="text" name="medicine" placeholder="e.g. NAPA 500mg" required></div>
+            <div class="field"><label>How to take</label><input type="text" name="dosage" placeholder="e.g. 1 tablet, 3 time"></div>
+          </div>
+          <div class="field"><label>For</label><input type="text" name="duration" placeholder="e.g. 5 days"></div>
+          <div id="prescriptionMsg" class="form-error" hidden></div>
+          <button type="submit" class="btn btn-primary btn-block">Save &amp; Submit</button>
         </form>
       </section>
 
-      <div class="grid2">
-        <section class="card patient-summary" aria-label="Selected patient">
-          <div class="avatar-circle" data-patient="initials">RA</div>
-          <div class="details">
-            <div class="name" data-patient="name">Rahim Ahmed</div>
-            <div class="meta" data-patient="meta">Patient ID: P-000178 · 22 years · Male · Blood group B+</div>
+      <section id="tab-reports" class="tab-panel">
+        <form class="card patient-context-form" data-target="tab-reports">
+          <div class="card-head"><div class="title">📋 Medical Reports</div></div>
+          <div style="display:flex; gap:10px; margin-bottom:14px;">
+            <input type="text" class="patient-context-input" placeholder="Patient ID, e.g. P-000178" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid var(--bg-soft);background:#F7F8FE;font-size:14px;">
+            <button type="submit" class="btn btn-outline">Load</button>
           </div>
-          <div class="badges">
-            <span class="pill-badge badge-success">Public records</span>
-            <span class="pill-badge badge-danger" data-patient="access">🔒 Private records locked</span>
-          </div>
-        </section>
-        <section class="card" data-otp aria-label="Private records">
-          <div class="card-head" style="margin-bottom:8px;">
-            <div>
-              <div class="title">🔒 Private records</div>
-              <div style="font-size:12px;color:var(--text-body);margin-top:4px;">Access requires OTP-verified patient consent.</div>
-            </div>
-            <button class="btn btn-outline btn-sm" type="button" data-otp-request>Request OTP</button>
-          </div>
-          <div class="form-error" hidden></div>
-          <div class="notice" hidden></div>
-          <div class="search-row" data-otp-box hidden>
-            <input type="text" inputmode="numeric" maxlength="6" aria-label="OTP code" placeholder="Enter 6-digit OTP">
-            <button class="btn btn-primary btn-sm" type="button" data-otp-verify>Verify</button>
-          </div>
-        </section>
-      </div>
+          <table><tr><th>Title</th><th>Type</th><th>Visibility</th></tr><tbody id="tab-reportsBody"><tr><td colspan="3" class="empty-row">Search a patient to see their records.</td></tr></tbody></table>
+        </form>
+      </section>
 
-      <div class="grid2">
-        <section class="card">
-          <div class="card-head"><div class="title">📝 Diagnosis and Prescription Entry</div><a class="link-btn" href="prescription.html">All prescriptions →</a></div>
-          <form data-rx-form novalidate>
-            <div class="form-error" hidden></div>
-            <div class="notice" hidden></div>
-            <div class="field"><label for="diagnosis">Diagnosis</label><input id="diagnosis" name="diagnosis" type="text" placeholder="Enter diagnosis"></div>
-            <div data-med-rows>
-              <div class="med-row">
-                <button type="button" class="link-btn remove-med">✕ Remove</button>
-                <div class="row2">
-                  <div class="field"><label>Medicine</label><input name="medicine" type="text" aria-label="Medicine" placeholder="e.g. NAPA 500mg"></div>
-                  <div class="field"><label>How to take</label><input name="dose" type="text" aria-label="How to take" placeholder="e.g. 1 tablet, 3 times daily"></div>
-                </div>
-                <div class="field"><label>For</label><input name="duration" type="text" aria-label="Duration" placeholder="e.g. 5 days"></div>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button type="button" class="link-btn" data-add-med>+ Add Medication</button>
-              <button class="btn btn-primary" type="submit">Save &amp; Submit</button>
-            </div>
-          </form>
-        </section>
-        <section class="card">
+      <section id="tab-lab" class="tab-panel">
+        <form class="card patient-context-form" data-target="tab-lab" data-filter="lab_report">
+          <div class="card-head"><div class="title">🧪 Lab Reports</div></div>
+          <div style="display:flex; gap:10px; margin-bottom:14px;">
+            <input type="text" class="patient-context-input" placeholder="Patient ID, e.g. P-000178" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid var(--bg-soft);background:#F7F8FE;font-size:14px;">
+            <button type="submit" class="btn btn-outline">Load</button>
+          </div>
+          <table><tr><th>Title</th><th>Type</th><th>Visibility</th></tr><tbody id="tab-labBody"><tr><td colspan="3" class="empty-row">Search a patient to see their lab reports.</td></tr></tbody></table>
+        </form>
+      </section>
+
+      <section id="tab-emergency" class="tab-panel">
+        <form id="emergencyForm" class="card">
           <div class="card-head"><div class="title" style="color:var(--danger);">🚨 Emergency Access Override</div></div>
-          <p style="font-size:12px;color:var(--text-body);margin-top:0;">Provide access to locked records in emergency situations. This action must be justified and logged.</p>
-          <form data-emergency-form novalidate>
-            <div class="form-error" hidden></div>
-            <div class="notice" hidden></div>
-            <div class="field"><label for="justification">Justification (required)</label><textarea id="justification" name="justification" rows="3" placeholder="Explain emergency situation"></textarea></div>
-            <button class="btn btn-danger btn-block" type="submit">Override Access</button>
-          </form>
-        </section>
-      </div>
-    </main>
+          <p style="font-size:12px;color:var(--text-body);margin-top:0;">Provide access to locked records in emergency situations. This action must be justified and is logged immediately.</p>
+          <div class="field"><label>Patient ID</label><input type="text" name="patient_upi" class="patient-context-input" placeholder="e.g. P-000178" required></div>
+          <div class="field"><label>Justification (required)</label><textarea name="reason" rows="3" placeholder="Explain emergency situation" required></textarea></div>
+          <div id="emergencyMsg" class="form-error" hidden></div>
+          <button type="submit" class="btn btn-danger btn-block">Override Access</button>
+        </form>
+      </section>
+
+      <section id="tab-activity" class="tab-panel">
+        <div class="card">
+          <div class="card-head"><div class="title">🕒 My Activity Log</div></div>
+          <table><tr><th>Patient ID</th><th>Access Type</th><th>When</th></tr><tbody id="doctorActivityBody"><tr><td colspan="3" class="empty-row">Loading…</td></tr></tbody></table>
+        </div>
+      </section>
+
+    </div>
   </div>
 </div>
 <script src="../shared/auth.js"></script>
-<script src="doctor.js"></script>
 </body>
 </html>
