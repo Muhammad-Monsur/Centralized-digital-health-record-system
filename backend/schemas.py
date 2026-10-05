@@ -82,3 +82,26 @@ class ProfileUpdateIn(BaseModel):
     blood_group: str | None = None
     address: str | None = None
 
+
+
+class PrescriptionIn(BaseModel):
+    patient_upi: str
+    diagnosis: str
+    medicine: str
+    dosage: str = ""
+    duration: str = ""
+
+
+class AccessRequestIn(BaseModel):
+    patient_upi: str
+    purpose: str = "Access private records"
+
+
+class ConsentDecisionIn(BaseModel):
+    approve: bool
+    otp_code: str | None = None  # required only when approving
+
+
+class EmergencyAccessIn(BaseModel):
+    patient_upi: str
+    reason: str
