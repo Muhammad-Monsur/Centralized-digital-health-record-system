@@ -93,4 +93,55 @@ def register(data: schemas.RegisterIn, response: Response, db: Session = Depends
 
 
 
+# log in 
+
+@router.post("/login")
+def login(data: schemas.LoginIn, response: Response, db: Session = Depends(get_db)):
+    email = data.email.strip().lower()
+    if data.portal not in PORTAL_ROLE:
+        raise HTTPException(400, "Unknown portal.")
+
+    # brute-force guard: 5 failed attempts per email locks it for 5 minutes
+    count, first = _FAILS.get(email, [0, time.time()])
+    if time.time() - first > 300:
+        count, first = 0, time.time()
+    if count >= 5:
+        raise HTTPException(429, "Too many failed attempts. Please wait a few minutes and try again.")
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+    ok = bool(user) and verify_password(data.password, user.password_hash) and user.role == PORTAL_ROLE[data.portal]
+    if not ok:
+        _FAILS[email] = [count + 1, first]
+        raise HTTPException(401, "Invalid email or password for this portal.")
+    if user.status == "Blocked":
+        raise HTTPException(403, "This account has been blocked. Contact your administrator.")
+
+    _FAILS.pop(email, None)
+    token = sign_session(user.id)
+    response.set_cookie("cdhrs_session", token, max_age=SESSION_SECONDS, httponly=True, samesite="lax", path="/")
+    log_audit(db, user.id, "Login", "user", user.id)
+    return {"ok": True, "redirect": f"/{data.portal}/profile.html", "user": user_to_schema(db, user)}
+
+
+
+
+# log out 
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("cdhrs_session", path="/")
+    return {"ok": True}
+
+
+
+
+
+# portal's profile.html calls this to fill in the signed-in user's details.
+
+me_router = APIRouter(prefix="/api", tags=["auth"])
+
+@me_router.get("/me", response_model=schemas.UserOut)
+def me(user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return user_to_schema(db, user)
+
+
 
