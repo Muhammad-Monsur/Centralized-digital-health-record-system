@@ -54,3 +54,31 @@ class DoctorOut(BaseModel):
     status: str
 
 
+class RecordCreateIn(BaseModel):
+    information_type: str  # record | prescription | lab_report
+    title: str
+    details: str = ""
+    visibility: str = "Public"
+
+
+class RecordOut(BaseModel):
+    id: int
+    information_type: str
+    title: str
+    details: str
+    visibility: str
+    doctor_name: str = ""
+    information_date: datetime
+
+
+class VisibilityIn(BaseModel):
+    profile_visibility: str  # "Public" | "Private"
+
+
+class ProfileUpdateIn(BaseModel):
+    full_name: str | None = None
+    phone: str | None = None
+    gender: str | None = None
+    blood_group: str | None = None
+    address: str | None = None
+
