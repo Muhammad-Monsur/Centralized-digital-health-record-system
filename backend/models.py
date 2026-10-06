@@ -91,7 +91,7 @@ class RolePermission(Base):
 
 
 class Patient(Base):
-
+    """Patient-specific fields. One-to-one with User (role='patient')."""
     __tablename__ = "patients"
 
     id = Column(Integer, primary_key=True)
@@ -133,7 +133,8 @@ class SystemAdminProfile(Base):
 
 
 class MedicalInformation(Base):
- __tablename__ = "medical_information"
+ 
+    __tablename__ = "medical_information"
 
     id = Column(Integer, primary_key=True)
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
@@ -147,7 +148,7 @@ class MedicalInformation(Base):
     information_date = Column(DateTime, default=now)
     created_at = Column(DateTime, default=now)
 
-   patient = relationship("Patient", back_populates="records")
+    patient = relationship("Patient", back_populates="records")
     doctor = relationship("Doctor")
 
 
@@ -187,6 +188,8 @@ class Consent(Base):
     patient = relationship("Patient")
     doctor = relationship("Doctor")
     otp = relationship("OTPVerification", uselist=False)
+
+
 
 
 

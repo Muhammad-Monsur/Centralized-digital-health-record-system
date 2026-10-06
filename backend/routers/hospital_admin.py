@@ -1,17 +1,15 @@
 """
-==========================
-Hospital and System Administration Portal - the Hospital Admin's half
-(SRS section 3.3):
-  - 3.3.3 Hospital and User Management  -> POST  /api/hospital-admin/doctors
-                                            GET   /api/hospital-admin/doctors
-                                            PATCH /api/hospital-admin/doctors/{id}/status
-  - 3.3.3 Audit, System Monitoring      -> GET   /api/hospital-admin/audit-log
-  - 3.3.3 overview stats                -> GET   /api/hospital-admin/overview
+Hospital and System Administration Portal :
+  -  Hospital and User Management  
+  -  Audit, System Monitoring      
+  - overview stats              
 
-THIS IS THE KEY BLOCKER FEATURE: doctors cannot self-register (SRS 3.2.1 /
-3.4.2), so a doctor account must be created here before that doctor can sign
-in at all. Every Hospital Admin is tied to exactly one Hospital (their
+THIS IS THE KEY BLOCKER FEATURE: 
+doctors cannot self-register , so a doctor account 
+must be created here before that doctor can sign in at all. 
+Every Hospital Admin is tied to exactly one Hospital (their
 `hospital_id`), and can only manage doctors within that hospital.
+
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -41,10 +39,7 @@ def create_doctor(
     db: Session = Depends(get_db),
 ):
     
-    """THE feature that unblocks doctor login. Hospital Admin fills in the
-    doctor's details and a temporary password; the doctor can sign in with
-    those credentials right away at /doctor/login.html."""
-
+    # THE feature that unblocks doctor login. Hospital Admin fills in the doctor's details and a temporary password.
     email = data.email.strip().lower()
     if db.query(models.User).filter(models.User.email == email).first():
         raise HTTPException(409, "An account with this email already exists.")
@@ -86,9 +81,8 @@ def set_doctor_status(
     user: models.User = Depends(require_role("hospital_admin")),
     db: Session = Depends(get_db),
 ):
-    """Block or re-activate a doctor (SRS 3.3 'Doctor Status Management').
-    A blocked doctor's User.status is also set so login.py's role/status
-    check rejects them immediately."""
+    # Block or re-activate a doctor 
+    
     if status not in ("Active", "Blocked"):
         raise HTTPException(400, "status must be 'Active' or 'Blocked'.")
     doctor = db.query(models.Doctor).filter(models.Doctor.id == doctor_id, models.Doctor.hospital_id == admin.hospital_id).first()
@@ -109,3 +103,44 @@ def overview(admin: models.HospitalAdminProfile = Depends(get_current_admin), db
     total_doctors = db.query(models.Doctor).filter(models.Doctor.hospital_id == admin.hospital_id).count()
     total_patients = db.query(models.Patient).count()  # patients aren't tied to one hospital yet
     return {"hospital_name": admin.hospital.name, "total_doctors": total_doctors, "total_patients": total_patients}
+
+
+
+#  Department Management 
+
+@router.get("/departments")
+def departments(admin: models.HospitalAdminProfile = Depends(get_current_admin), db: Session = Depends(get_db)):
+    doctors = db.query(models.Doctor).filter(models.Doctor.hospital_id == admin.hospital_id).all()
+    counts: dict[str, int] = {}
+    for d in doctors:
+        key = d.specialization or "General"
+        counts[key] = counts.get(key, 0) + 1
+    demo_staff = {"Cardiology": (12, 8), "Medicine": (20, 12), "Orthopedics": (16, 10), "Pediatrics": (10, 8), "Radiology": (8, 6), "General": (6, 4)}
+    return [
+        {"department": name, "doctors": count, "nurses": demo_staff.get(name, (8, 6))[0], "staff": demo_staff.get(name, (8, 6))[1]}
+        for name, count in (counts.items() if counts else [("No departments yet", 0)])
+    ]
+
+
+# Patient admissions 
+
+@router.get("/admissions")
+def admissions(admin: models.HospitalAdminProfile = Depends(get_current_admin)):
+    
+    return [
+        {"patient_id": "P-000178", "name": "Tahia Raisa", "ward": "General Ward", "admitted_on": "2026-09-10", "status": "Admitted"},
+        {"patient_id": "P-000182", "name": "Kamal Hossain", "ward": "ICU", "admitted_on": "2026-09-14", "status": "Admitted"},
+        {"patient_id": "P-000150", "name": "Nusrat Jahan", "ward": "Maternity", "admitted_on": "2026-09-01", "status": "Discharged"},
+    ]
+
+
+# System Monitoring (audit log) 
+
+@router.get("/audit-log")
+def audit_log(admin: models.HospitalAdminProfile = Depends(get_current_admin), db: Session = Depends(get_db)):
+    logs = db.query(models.AuditLog).order_by(models.AuditLog.timestamp.desc()).limit(50).all()
+    out = []
+    for log in logs:
+        actor = db.query(models.User).filter(models.User.id == log.user_id).first() if log.user_id else None
+        out.append({"timestamp": log.timestamp, "user": actor.full_name if actor else "System", "action": log.action, "details": log.details})
+    return out
