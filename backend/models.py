@@ -91,12 +91,37 @@ class RolePermission(Base):
     permission = relationship("Permission")
 
 
-# patient base Tahia add korbe 
+class Patient(Base):
+    """Patient-specific fields. One-to-one with User (role='patient')."""
+    __tablename__ = "patients"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    upi = Column(String(20), unique=True, nullable=False)  # Unique Patient ID, e.g. P-000178
+    date_of_birth = Column(String(20), default="")
+    blood_group = Column(String(10), default="")
+    address = Column(String(255), default="")
+    profile_visibility = Column(String(10), default="Public")  # Public | Private (SRS 3.1.3 Data Visibility Mgmt)
+
+    user = relationship("User", back_populates="patient_profile")
+    records = relationship("MedicalInformation", back_populates="patient")
 
 
+# doctor base
+class Doctor(Base):
+    """Doctor-specific fields. One-to-one with User (role='doctor').
+    IMPORTANT (SRS 3.2 + 3.4.2): doctors do NOT self-register - a Hospital
+    Admin creates this row (see routers/hospital_admin.py)."""
+    __tablename__ = "doctors"
 
-# doctor base suzana add korbe
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    hospital_id = Column(Integer, ForeignKey("hospitals.id"), nullable=False)
+    specialization = Column(String(100), default="")
+    verification_status = Column(String(20), default="Active")  # Active | Blocked
 
+    user = relationship("User", back_populates="doctor_profile")
+    hospital = relationship("Hospital", back_populates="doctors")
 
 
 # hospital admin profile  table 
@@ -121,7 +146,24 @@ class SystemAdminProfile(Base):
     user = relationship("User", back_populates="system_admin_profile")
 
 
-# medical info base Tahia add korbe
+class MedicalInformation(Base):
+ 
+    __tablename__ = "medical_information"
+
+    id = Column(Integer, primary_key=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=True)  # null if the patient uploaded it themself
+    hospital_id = Column(Integer, ForeignKey("hospitals.id"), nullable=True)
+    information_type = Column(String(30), nullable=False)  # record | prescription | lab_report
+    title = Column(String(150), nullable=False)
+    details = Column(Text, default="")
+    file_path = Column(String(255), default="")  # path under /uploads, if a file was attached
+    visibility = Column(String(10), default="Public")  # Public | Private (SRS 3.11.1)
+    information_date = Column(DateTime, default=now)
+    created_at = Column(DateTime, default=now)
+
+    patient = relationship("Patient", back_populates="records")
+    doctor = relationship("Doctor")
 
 
 
@@ -143,7 +185,23 @@ class OTPVerification(Base):
 
 
 
-# consent base Tahia add korbe
+class Consent(Base):
+    """The patient's decision on an AccessRequest, verified with an OTP."""
+    __tablename__ = "consents"
+
+    id = Column(Integer, primary_key=True)
+    request_id = Column(Integer, ForeignKey("access_requests.id"), nullable=False)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("doctors.id"), nullable=False)
+    status = Column(String(20), default="Pending")  # Pending | Approved | Rejected | Revoked
+    granted_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    revoked_at = Column(DateTime, nullable=True)
+
+    request = relationship("AccessRequest")
+    patient = relationship("Patient")
+    doctor = relationship("Doctor")
+    otp = relationship("OTPVerification", uselist=False)
 
 
 

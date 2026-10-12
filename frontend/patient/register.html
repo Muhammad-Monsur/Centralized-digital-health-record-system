@@ -37,7 +37,15 @@
     <div class="sub">Join CDHRS as a patient</div>
     <form method="post" data-auth="register" novalidate>
       <div class="row2"><div class="field"><label>Full Name</label><input type="text" name="full_name" placeholder="Enter your full name" required></div>
-      <div class="field"><label>Date of Birth</label><input type="date" name="dob" required></div></div>
+<div class="field">
+  <label for="dob">Date of Birth</label>
+  <input
+    type="date"
+    id="dob"
+    name="dob"
+    required
+      >
+      </div>
       <div class="row2"><div class="field"><label>Email</label><input type="email" name="email" placeholder="Enter your email" required></div>
       <div class="field"><label>Phone</label><input type="tel" name="phone" placeholder="+880 1XXX XXXXXX" required></div></div>
       <div class="field"><label>Gender</label><select name="gender"><option>Select gender</option><option>Male</option><option>Female</option><option>Other</option></select></div>
@@ -51,5 +59,22 @@
   </div>
 </div></div>
 <script src="../shared/auth.js"></script>
+<script src="../shared/auth.js"></script>
+
+<script>
+  const dobInput = document.getElementById("dob");
+
+  if (dobInput) {
+    const today = new Date();
+
+    const localDate = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, "0"),
+      String(today.getDate()).padStart(2, "0")
+    ].join("-");
+
+    dobInput.max = localDate;
+  }
+</script>
 </body>
 </html>
