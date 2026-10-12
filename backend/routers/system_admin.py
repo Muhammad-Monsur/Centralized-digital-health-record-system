@@ -168,6 +168,36 @@ def create_hospital(
     return {"ok": True, "id": h.id}
 
 
+@router.patch("/hospitals/{hospital_id}")
+def update_hospital(
+    hospital_id: int,
+    data: schemas.HospitalUpdateIn,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    h = db.query(models.Hospital).filter(
+        models.Hospital.id == hospital_id
+    ).first()
+
+    if not h:
+        raise HTTPException(404, "Hospital not found.")
+
+    if data.name is not None and data.name.strip():
+        h.name = data.name.strip()
+    if data.address is not None:
+        h.address = data.address.strip()
+    if data.phone is not None:
+        h.phone = data.phone.strip()
+
+    db.commit()
+
+    log_audit(
+        db, user.id, "System Admin updated a hospital",
+        "hospital", h.id, h.name
+    )
+    return {"ok": True}
+
+
 
 @router.get("/audit-log")
 def audit_log(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
