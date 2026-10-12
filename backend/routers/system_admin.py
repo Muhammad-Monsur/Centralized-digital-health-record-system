@@ -47,6 +47,80 @@ def rbac(user: models.User = Depends(require_role("system_admin")), db: Session 
     return out
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+@router.get("/users")
+def all_users(
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    rows = db.query(models.User).order_by(models.User.id).all()
+    out = []
+
+    for u in rows:
+        hospital_name = ""
+
+        if u.role == "doctor" and u.doctor_profile:
+            hospital_name = u.doctor_profile.hospital.name
+        elif u.role == "hospital_admin" and u.hospital_admin_profile:
+            hospital_name = u.hospital_admin_profile.hospital.name
+
+        out.append({
+            "id": u.id,
+            "full_name": u.full_name,
+            "email": u.email,
+            "role": u.role,
+            "hospital_name": hospital_name,
+            "status": u.status
+        })
+
+    return out
+
+
+@router.patch("/users/{user_id}/status")
+def set_user_status(
+    user_id: int,
+    data: schemas.UserStatusIn,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    if data.status not in ("Active", "Blocked"):
+        raise HTTPException(400, "status must be 'Active' or 'Blocked'.")
+
+    target = db.query(models.User).filter(
+        models.User.id == user_id
+    ).first()
+
+    if not target:
+        raise HTTPException(404, "User not found.")
+
+    if target.id == user.id:
+        raise HTTPException(400, "You cannot block your own account.")
+
+    target.status = data.status
+
+    if target.role == "doctor" and target.doctor_profile:
+        target.doctor_profile.verification_status = data.status
+
+    db.commit()
+
+    log_audit(
+        db, user.id,
+        f"System Admin set user status to {data.status}",
+        "user", target.id, target.email
+    )
+    return {"ok": True}
+
 @router.get("/hospitals")
 def hospitals(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
     rows = db.query(models.Hospital).all()
