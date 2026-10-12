@@ -9,7 +9,7 @@
 
 import re
 import time
-
+from datetime import datetime 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
@@ -29,7 +29,6 @@ PORTAL_ROLE = {
 }
 ROLE_PORTAL = {v: k for k, v in PORTAL_ROLE.items()}
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
 # very small in-memory brute-force guard: email -> [fail_count, first_fail_time]
 
 _FAILS: dict[str, list] = {}
@@ -69,6 +68,14 @@ def register(data: schemas.RegisterIn, response: Response, db: Session = Depends
         raise HTTPException(400, "Password must be at least 8 characters.")
     if data.password != data.confirm_password:
         raise HTTPException(400, "Passwords do not match.")
+    
+    # Reject future dates of birth
+    if data.dob > date.today():
+        raise HTTPException(
+            status_code=400,
+            detail="Date of birth cannot be in the future.",
+        )
+
     if db.query(models.User).filter(models.User.email == email).first():
         raise HTTPException(409, "An account with this email already exists.")
 
