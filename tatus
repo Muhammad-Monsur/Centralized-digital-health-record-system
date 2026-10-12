@@ -1,0 +1,164 @@
+[1mdiff --cc backend/routers/patient.py[m
+[1mindex 23f0436,d702dac..0000000[m
+[1m--- a/backend/routers/patient.py[m
+[1m+++ b/backend/routers/patient.py[m
+[36m@@@ -1,6 -1,9 +1,14 @@@[m
+  import datetime[m
+[32m++<<<<<<< HEAD[m
+[32m +[m
+[32m +from fastapi import APIRouter, Depends, HTTPException[m
+[32m++=======[m
+[32m+ import uuid[m
+[32m+ from pathlib import Path[m
+[32m+ [m
+[32m+ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile[m
+[32m+ from fastapi.responses import FileResponse[m
+[32m++>>>>>>> e7ddb56 (Update patient module)[m
+  from sqlalchemy.orm import Session[m
+  [m
+  from .. import models, schemas[m
+[36m@@@ -8,6 -11,11 +16,14 @@@[m [mfrom ..deps import get_db, log_audit, r[m
+  from ..security import generate_otp, hash_otp[m
+  [m
+  router = APIRouter(prefix="/api/patient", tags=["patient"])[m
+[32m++<<<<<<< HEAD[m
+[32m++=======[m
+[32m+ [m
+[32m+ UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"[m
+[32m+ UPLOAD_DIR.mkdir(exist_ok=True)[m
+[32m+ ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".webp"}[m
+[32m+ MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB per file[m
+[32m++>>>>>>> e7ddb56 (Update patient module)[m
+  [m
+  [m
+  def _my_patient(db: Session, user: models.User) -> models.Patient:[m
+[36m@@@ -77,7 -85,7 +93,11 @@@[m [mdef list_records(user: models.User = De[m
+          {[m
+              "id": r.id, "information_type": r.information_type, "title": r.title, "details": r.details,[m
+              "visibility": r.visibility, "information_date": r.information_date,[m
+[32m++<<<<<<< HEAD[m
+[32m +            "doctor_name": r.doctor.user.full_name if r.doctor else "",[m
+[32m++=======[m
+[32m+             "doctor_name": r.doctor.user.full_name if r.doctor else "", "has_file": bool(r.file_path),[m
+[32m++>>>>>>> e7ddb56 (Update patient module)[m
+          }[m
+          for r in records[m
+      ][m
+[36m@@@ -85,9 -93,7 +105,13 @@@[m
+  [m
+  @router.post("/records")[m
+  def add_record(data: schemas.RecordCreateIn, user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):[m
+[32m++<<<<<<< HEAD[m
+[32m +    """Patient uploads their own report (SRS 3.1.7 'Upload PDFs and photos of[m
+[32m +    paper reports'). Actual file storage (not just metadata) is planned for[m
+[32m +    next phase - see README "Not built yet"."""[m
+[32m++=======[m
+[32m+     """Add a record with no attached file (text/metadata only)."""[m
+[32m++>>>>>>> e7ddb56 (Update patient module)[m
+      p = _my_patient(db, user)[m
+      record = models.MedicalInformation([m
+          patient_id=p.id, information_type=data.information_type, title=data.title,[m
+[36m@@@ -99,82 -105,191 +123,270 @@@[m
+      return {"ok": True, "id": record.id}[m
+  [m
+  [m
+[32m++<<<<<<< HEAD[m
+[32m +# ---------------- consent / access requests (SRS 3.1.3 Consent Management) ----------------[m
+[32m +@router.get("/access-requests")[m
+[32m +def list_access_requests(user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):[m
+[32m +    p = _my_patient(db, user)[m
+[32m +    requests = ([m
+[32m +        db.query(models.AccessRequest)[m
+[32m +        .filter(models.AccessRequest.patient_id == p.id)[m
+[32m +        .order_by(models.AccessRequest.requested_at.desc())[m
+[32m +        .all()[m
+[32m +    )[m
+[32m +    return [[m
+[32m +        {[m
+[32m +            "id": r.id, "doctor_name": r.doctor.user.full_name, "purpose": r.purpose,[m
+[32m +            "status": r.status, "requested_at": r.requested_at,[m
+[32m +        }[m
+[32m +        for r in requests[m
+[32m +    ][m
+[32m +[m
+[32m +[m
+[32m +@router.post("/access-requests/{request_id}/decision")[m
+[32m +def decide_access_request([m
+[32m +    request_id: int, data: schemas.ConsentDecisionIn,[m
+[32m +    user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db),[m
+[32m +):[m
+[32m +    """Patient approves or rejects a doctor's private-access request.[m
+[32m +    Approving REQUIRES the OTP code that was generated when the Consent row[m
+[32m +    was created (SRS 3.1.6 'OTP-Based Consent Verification')."""[m
+[32m +    p = _my_patient(db, user)[m
+[32m +    req = db.query(models.AccessRequest).filter([m
+[32m +        models.AccessRequest.id == request_id, models.AccessRequest.patient_id == p.id[m
+[32m +    ).first()[m
+[32m +    if not req:[m
+[32m +        raise HTTPException(404, "Access request not found.")[m
+[32m +    if req.status != "Pending":[m
+[32m +        raise HTTPException(400, "This request has already been decided.")[m
+[32m +[m
+[32m +    consent = db.query(models.Consent).filter(models.Consent.request_id == req.id).first()[m
+[32m +[m
+[32m +    if not data.approve:[m
+[32m +        req.status = "Rejected"[m
+[32m +        if consent:[m
+[32m +            consent.status = "Rejected"[m
+[32m +        db.commit()[m
+[32m +        log_audit(db, user.id, "Patient rejected access request", "access_request", req.id)[m
+[32m +        return {"ok": True, "status": "Rejected"}[m
+[32m +[m
+[32m +    # approving: verify the OTP[m
+[32m +    if not consent or not consent.otp:[m
+[32m +        raise HTTPException(400, "No OTP was generated for this request.")[m
+[32m +    if consent.otp.expires_at < datetime.datetime.utcnow():[m
+[32m +        raise HTTPException(400, "This OTP has expired. Ask the doctor to request access again.")[m
+[32m +    if not data.otp_code or hash_otp(data.otp_code) != consent.otp.otp_hash:[m
+[32m +        raise HTTPException(400, "Incorrect OTP code.")[m
+[32m +[m
+[32m +    req.status = "Approved"[m
+[32m +    consent.status = "Approved"[m
+[32m +    consent.granted_at = datetime.datetime.utcnow()[m
+[32m +    consent.expires_at = datetime.datetime.utcnow() + datetime.timedelta(days=7)[m
+[32m +    consent.otp.verified_at = datetime.datetime.utcnow()[m
+[32m +    db.commit()[m
+[32m +    log_audit(db, user.id, "Patient approved access request", "access_request", req.id)[m
+[32m +    return {"ok": True, "status": "Approved"}[m
+[32m +[m
+[32m +[m
+[32m +# ---------------- activity log (SRS 3.1.3 Access History Management) ----------------[m
+[32m +@router.get("/activity-log")[m
+[32m +def activity_log(user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):[m
+[32m +    p = _my_patient(db, user)[m
+[32m +    logs = ([m
+[32m +        db.query(models.AccessLog)[m
+[32m +        .filter(models.AccessLog.patient_id == p.id)[m
+[32m +        .order_by(models.AccessLog.accessed_at.desc())[m
+[32m +        .limit(100)[m
+[32m +        .all()[m
+[32m +    )[m
+[32m +    out = [][m
+[32m++=======[m
+[32m+ @router.post("/records/upload")[m
+[32m+ def add_record_with_file([m
+[32m+     information_type: str = Form(...), title: str = Form(...), details: str = Form(""),[m
+[32m+     visibility: str = Form("Public"), file: UploadFile | None = None,[m
+[32m+     user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db),[m
+[32m+ ):[m
+[32m+     """Same as POST /records but accepts an actual file (SRS 3.1.7 'Upload[m
+[32m+     PDFs and photos of paper reports'). The file is saved under /uploads[m
+[32m+     with a random name (never the original filename, to avoid collisions[m
+[32m+     and path tricks) and is only ever served back through the protected[m
+[32m+     /records/{id}/file endpoints below - never as a plain static URL - so[m
+[32m+     visibility/consent rules still apply to the file itself."""[m
+[32m+     p = _my_patient(db, user)[m
+[32m+     file_path = ""[m
+[32m+     if file and file.filename:[m
+[32m+         ext = Path(file.filename).suffix.lower()[m
+[32m+         if ext not in ALLOWED_EXTENSIONS:[m
+[32m+             raise HTTPException(400, f"Unsupported file type '{ext}'. Allowed: PDF, PNG, JPG, WEBP.")[m
+[32m+         content = file.file.read()[m
+[32m+         if len(content) > MAX_UPLOAD_BYTES:[m
+[32m+             raise HTTPException(400, "File is too large. Maximum size is 10 MB.")[m
+[32m+         safe_name = f"{uu
