@@ -153,40 +153,38 @@ def upgrade() -> None:
     
     
     
- op.create_table('medical_information',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('patient_id', sa.Integer(), nullable=False),
-    sa.Column('doctor_id', sa.Integer(), nullable=True),
-    sa.Column('hospital_id', sa.Integer(), nullable=True),
-    sa.Column('information_type', sa.String(length=30), nullable=False),
-    sa.Column('title', sa.String(length=150), nullable=False),
-    sa.Column('details', sa.Text(), nullable=True),
-    sa.Column('file_path', sa.String(length=255), nullable=True),
-    sa.Column('visibility', sa.String(length=10), nullable=True),
-    sa.Column('information_date', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['doctor_id'], ['doctors.id'], ),
-    sa.ForeignKeyConstraint(['hospital_id'], ['hospitals.id'], ),
-    sa.ForeignKeyConstraint(['patient_id'], ['patients.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )   
-   
-   
-   
-op.create_table('consents',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('request_id', sa.Integer(), nullable=False),
-    sa.Column('patient_id', sa.Integer(), nullable=False),
-    sa.Column('doctor_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.String(length=20), nullable=True),
-    sa.Column('granted_at', sa.DateTime(), nullable=True),
-    sa.Column('expires_at', sa.DateTime(), nullable=True),
-    sa.Column('revoked_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['doctor_id'], ['doctors.id'], ),
-    sa.ForeignKeyConstraint(['patient_id'], ['patients.id'], ),
-    sa.ForeignKeyConstraint(['request_id'], ['access_requests.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
+    op.create_table('medical_information',
+       sa.Column('id', sa.Integer(), nullable=False),
+       sa.Column('patient_id', sa.Integer(), nullable=False),
+       sa.Column('doctor_id', sa.Integer(), nullable=True),
+       sa.Column('hospital_id', sa.Integer(), nullable=True),
+       sa.Column('information_type', sa.String(length=30), nullable=False),
+       sa.Column('title', sa.String(length=150), nullable=False),
+       sa.Column('details', sa.Text(), nullable=True),
+       sa.Column('file_path', sa.String(length=255), nullable=True),
+       sa.Column('visibility', sa.String(length=10), nullable=True),
+       sa.Column('information_date', sa.DateTime(), nullable=True),
+       sa.Column('created_at', sa.DateTime(), nullable=True),
+       sa.ForeignKeyConstraint(['doctor_id'], ['doctors.id'], ),
+       sa.ForeignKeyConstraint(['hospital_id'], ['hospitals.id'], ),
+       sa.ForeignKeyConstraint(['patient_id'], ['patients.id'], ),
+       sa.PrimaryKeyConstraint('id')
+       )
+       op.create_table('consents',
+       sa.Column('id', sa.Integer(), nullable=False),
+       sa.Column('request_id', sa.Integer(), nullable=False),
+       sa.Column('patient_id', sa.Integer(), nullable=False),
+       sa.Column('doctor_id', sa.Integer(), nullable=False),
+       sa.Column('status', sa.String(length=20), nullable=True),
+       sa.Column('granted_at', sa.DateTime(), nullable=True),
+       sa.Column('expires_at', sa.DateTime(), nullable=True),
+       sa.Column('revoked_at', sa.DateTime(), nullable=True),
+       sa.ForeignKeyConstraint(['doctor_id'], ['doctors.id'], ),
+       sa.ForeignKeyConstraint(['patient_id'], ['patients.id'], ),
+       sa.ForeignKeyConstraint(['request_id'], ['access_requests.id'], ),
+       sa.PrimaryKeyConstraint('id')
+       )
+
    
     op.create_table('otp_verifications',
     sa.Column('id', sa.Integer(), nullable=False),
