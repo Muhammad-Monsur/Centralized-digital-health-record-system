@@ -11,6 +11,7 @@ from .database import Base
 def now():
     return datetime.datetime.utcnow()
 
+
 # hospital table  
 class Hospital(Base):
     __tablename__ = "hospitals"
