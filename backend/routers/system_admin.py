@@ -141,6 +141,33 @@ def hospitals(
     ]
     
     
+@router.post("/hospitals")
+def create_hospital(
+    data: schemas.HospitalCreateIn,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    name = data.name.strip()
+
+    if not name:
+        raise HTTPException(400, "Hospital name is required.")
+
+    h = models.Hospital(
+        name=name,
+        address=data.address.strip(),
+        phone=data.phone.strip()
+    )
+    db.add(h)
+    db.commit()
+    db.refresh(h)
+
+    log_audit(
+        db, user.id, "System Admin created a hospital",
+        "hospital", h.id, h.name
+    )
+    return {"ok": True, "id": h.id}
+
+
 
 @router.get("/audit-log")
 def audit_log(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
