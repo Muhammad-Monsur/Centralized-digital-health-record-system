@@ -121,11 +121,26 @@ def set_user_status(
     )
     return {"ok": True}
 
-@router.get("/hospitals")
-def hospitals(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
-    rows = db.query(models.Hospital).all()
-    return [{"id": h.id, "name": h.name, "status": h.status, "doctors": len(h.doctors)} for h in rows]
 
+@router.get("/hospitals")
+def hospitals(
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    rows = db.query(models.Hospital).all()
+    return [
+        {
+            "id": h.id,
+            "name": h.name,
+            "address": h.address,
+            "phone": h.phone,
+            "status": h.status,
+            "doctors": len(h.doctors)
+        }
+        for h in rows
+    ]
+    
+    
 
 @router.get("/audit-log")
 def audit_log(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
