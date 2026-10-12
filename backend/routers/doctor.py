@@ -1,17 +1,3 @@
-"""
-routers/doctor.py
-==================
-Doctor / Healthcare Provider Portal (SRS section 3.2):
-  - 3.2.3 Patient Search and Identification  -> GET  /api/doctor/patients/{upi}
-  - 3.2.3 Private Record Access and Consent  -> POST /api/doctor/access-requests
-  - 3.2.3 Medical Record Management          -> POST /api/doctor/prescriptions
-  - 3.2.3 Emergency Access Management        -> POST /api/doctor/emergency-access
-
-Every endpoint requires a signed-in, non-blocked DOCTOR account
-(require_role("doctor")). Doctor accounts can only be created by a Hospital
-Admin - see routers/hospital_admin.py.
-"""
-
 import datetime
 from pathlib import Path
 
@@ -43,18 +29,15 @@ def _find_patient(db: Session, upi: str) -> models.Patient:
 
 
 def get_current_doctor(user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)) -> models.Doctor:
-    """Dependency: resolves the signed-in user straight to their Doctor row,
-    so every route below just asks for `doctor: models.Doctor = Depends(get_current_doctor)`."""
     return _my_doctor(db, user)
 
 
-# ---------------- patient search (SRS 3.2.3 Patient Search and Identification) ----------------
+# ---------------- patient search ----------------
 @router.get("/patients/{upi}")
 def search_patient(upi: str, doctor: models.Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
     patient = _find_patient(db, upi)
     user = patient.user
 
-    # Record that this doctor viewed the patient's public info (SRS 3.1.3 Access History)
     db.add(models.AccessLog(user_id=doctor.user_id, patient_id=patient.id, access_type="viewed_public"))
     db.commit()
 
@@ -62,7 +45,6 @@ def search_patient(upi: str, doctor: models.Doctor = Depends(get_current_doctor)
         {"id": r.id, "information_type": r.information_type, "title": r.title, "information_date": r.information_date, "has_file": bool(r.file_path)}
         for r in patient.records if r.visibility == "Public"
     ]
-    # Is there an already-approved, not-yet-expired consent for THIS doctor + patient?
     approved = (
         db.query(models.Consent)
         .filter(
@@ -106,7 +88,7 @@ def get_record_file(record_id: int, doctor: models.Doctor = Depends(get_current_
     return FileResponse(UPLOAD_DIR / record.file_path)
 
 
-# ---------------- request private access + OTP (SRS 3.2.3 Private Record Access and Consent) ----------------
+# ---------------- request private access + OTP ----------------
 @router.post("/access-requests")
 def request_access(data: schemas.AccessRequestIn, user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)):
     doctor = _my_doctor(db, user)
@@ -130,8 +112,6 @@ def request_access(data: schemas.AccessRequestIn, user: models.User = Depends(re
 
     log_audit(db, user.id, "Doctor requested private record access", "access_request", req.id, patient.upi)
 
-    # Email the OTP to the PATIENT if SMTP is set up in .env. If not, fall
-    # back to demo mode and show the code on the doctor's screen instead.
     sent = send_email(
         patient.user.email, "CDHRS: a doctor wants to see your private records",
         f"{user.full_name} asked to view your private records ({data.purpose}).\n"
@@ -141,7 +121,7 @@ def request_access(data: schemas.AccessRequestIn, user: models.User = Depends(re
     return {"ok": True, "request_id": req.id, "emailed": sent, "demo_otp_for_patient": None if sent else otp_code}
 
 
-# ---------------- prescriptions / medical records (SRS 3.2.3 Medical Record Management) ----------------
+# ---------------- prescriptions / medical records ----------------
 @router.post("/prescriptions")
 def add_prescription(data: schemas.PrescriptionIn, user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)):
     doctor = _my_doctor(db, user)
@@ -159,7 +139,7 @@ def add_prescription(data: schemas.PrescriptionIn, user: models.User = Depends(r
     return {"ok": True, "id": record.id}
 
 
-# ---------------- emergency access (SRS 3.2.3 Emergency Access Management) ----------------
+# ---------------- emergency access ----------------
 @router.post("/emergency-access")
 def emergency_access(data: schemas.EmergencyAccessIn, user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)):
     if not data.reason.strip():
