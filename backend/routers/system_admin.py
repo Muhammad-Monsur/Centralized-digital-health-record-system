@@ -262,3 +262,56 @@ def backup(user: models.User = Depends(require_role("system_admin")), db: Sessio
             note = f"SQLite backup saved to {dest.name}"
     log_audit(db, user.id, "Manual database backup triggered", details=note)
     return {"ok": True, "message": note}
+
+
+
+STARTED_AT = datetime.datetime.utcnow()
+
+
+@router.get("/usage")
+def usage(
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    today = datetime.datetime.utcnow().date()
+    days = [
+        today - datetime.timedelta(days=n)
+        for n in range(6, -1, -1)
+    ]
+    since = datetime.datetime.combine(days[0], datetime.time.min)
+
+    logins = {day: 0 for day in days}
+    accesses = {day: 0 for day in days}
+
+    login_rows = db.query(models.AuditLog).filter(
+        models.AuditLog.action == "Login",
+        models.AuditLog.timestamp >= since
+    ).all()
+
+    for row in login_rows:
+        if row.timestamp.date() in logins:
+            logins[row.timestamp.date()] += 1
+
+    access_rows = db.query(models.AccessLog).filter(
+        models.AccessLog.accessed_at >= since
+    ).all()
+
+    for row in access_rows:
+        if row.accessed_at.date() in accesses:
+            accesses[row.accessed_at.date()] += 1
+
+    minutes = int(
+        (datetime.datetime.utcnow() - STARTED_AT).total_seconds() // 60
+    )
+
+    return {
+        "days": [
+            {
+                "date": day.strftime("%b %d"),
+                "logins": logins[day],
+                "record_accesses": accesses[day]
+            }
+            for day in days
+        ],
+        "uptime": f"{minutes // 60}h {minutes % 60}m"
+    }
