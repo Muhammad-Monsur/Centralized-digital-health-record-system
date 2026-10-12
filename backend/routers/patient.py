@@ -36,27 +36,9 @@ def get_profile(user: models.User = Depends(require_role("patient")), db: Sessio
     }
 
 
-# ---------------- edit profile (SRS 3.1.3 Profile Management) ----------------
-@router.patch("/profile")
-def update_profile(data: schemas.ProfileUpdateIn, user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
-    p = _my_patient(db, user)
-    if data.full_name is not None and data.full_name.strip():
-        user.full_name = data.full_name.strip()
-    if data.phone is not None:
-        user.phone = data.phone.strip()
-    if data.gender is not None:
-        user.gender = data.gender
-    if data.blood_group is not None:
-        p.blood_group = data.blood_group.strip()
-    if data.address is not None:
-        p.address = data.address.strip()
-    db.commit()
-    log_audit(db, user.id, "Patient updated their profile", "patient", p.id)
-    return {
-        "full_name": user.full_name, "email": user.email, "phone": user.phone, "gender": user.gender,
-        "patient_id": p.upi, "date_of_birth": p.date_of_birth, "blood_group": p.blood_group,
-        "address": p.address, "profile_visibility": p.profile_visibility,
-    }
+# ---------------- update profile (SRS 3.1.3 Profile Management) ----------------
+"""update profile"""
+"""sprint-4"""
 
 
 # ---------------- visibility toggle (SRS 3.1.3 Data Visibility Management) ----------------
@@ -72,6 +54,7 @@ def set_visibility(data: schemas.VisibilityIn, user: models.User = Depends(requi
 
 
 # ---------------- medical records (SRS 3.1.3 Medical Record Management) ----------------
+"""listing"""
 @router.get("/records")
 def list_records(user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
     p = _my_patient(db, user)
@@ -90,7 +73,7 @@ def list_records(user: models.User = Depends(require_role("patient")), db: Sessi
         for r in records
     ]
 
-
+"""add record without file"""
 @router.post("/records")
 def add_record(data: schemas.RecordCreateIn, user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
     """Add a record with no attached file (text/metadata only)."""
@@ -105,41 +88,9 @@ def add_record(data: schemas.RecordCreateIn, user: models.User = Depends(require
     return {"ok": True, "id": record.id}
 
 
-@router.post("/records/upload")
-def add_record_with_file(
-    information_type: str = Form(...), title: str = Form(...), details: str = Form(""),
-    visibility: str = Form("Public"), file: UploadFile | None = None,
-    user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db),
-):
-    """Same as POST /records but accepts an actual file (SRS 3.1.7 'Upload
-    PDFs and photos of paper reports'). The file is saved under /uploads
-    with a random name (never the original filename, to avoid collisions
-    and path tricks) and is only ever served back through the protected
-    /records/{id}/file endpoints below - never as a plain static URL - so
-    visibility/consent rules still apply to the file itself."""
-    p = _my_patient(db, user)
-    file_path = ""
-    if file and file.filename:
-        ext = Path(file.filename).suffix.lower()
-        if ext not in ALLOWED_EXTENSIONS:
-            raise HTTPException(400, f"Unsupported file type '{ext}'. Allowed: PDF, PNG, JPG, WEBP.")
-        content = file.file.read()
-        if len(content) > MAX_UPLOAD_BYTES:
-            raise HTTPException(400, "File is too large. Maximum size is 10 MB.")
-        safe_name = f"{uuid.uuid4().hex}{ext}"
-        dest = UPLOAD_DIR / safe_name
-        with open(dest, "wb") as out:
-            out.write(content)
-        file_path = safe_name
+"""add record with file"""
+"""sprint-4"""
 
-    record = models.MedicalInformation(
-        patient_id=p.id, information_type=information_type, title=title,
-        details=details, visibility=visibility, file_path=file_path,
-    )
-    db.add(record)
-    db.commit()
-    log_audit(db, user.id, "Patient added a medical record" + (" with a file" if file_path else ""), "medical_information", record.id, title)
-    return {"ok": True, "id": record.id, "has_file": bool(file_path)}
 
 
 @router.get("/records/{record_id}/file")
@@ -235,21 +186,8 @@ def revoke_access(request_id: int, user: models.User = Depends(require_role("pat
 
 
 # ---------------- hospital record sharing (Sprint 4 - SRS 3.3 Inter-Hospital Access) ----------------
-@router.get("/sharing-requests")
-def list_sharing_requests(user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
-    """Other hospitals asking to see this patient's records."""
-    p = _my_patient(db, user)
-    rows = (
-        db.query(models.HospitalShareRequest)
-        .filter(models.HospitalShareRequest.patient_id == p.id)
-        .order_by(models.HospitalShareRequest.requested_at.desc())
-        .all()
-    )
-    return [
-        {"id": r.id, "hospital_name": r.hospital.name, "status": r.status, "requested_at": r.requested_at}
-        for r in rows
-    ]
-
+"""list sharing requests"""
+"""sprint-4"""
 
 @router.post("/sharing-requests/{request_id}/decision")
 def decide_sharing_request(

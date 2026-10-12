@@ -1,27 +1,17 @@
-"""
-routers/doctor.py
-==================
-Doctor / Healthcare Provider Portal (SRS section 3.2):
-  - 3.2.3 Patient Search and Identification  -> GET  /api/doctor/patients/{upi}
-  - 3.2.3 Private Record Access and Consent  -> POST /api/doctor/access-requests
-  - 3.2.3 Medical Record Management          -> POST /api/doctor/prescriptions
-  - 3.2.3 Emergency Access Management        -> POST /api/doctor/emergency-access
-
-Every endpoint requires a signed-in, non-blocked DOCTOR account
-(require_role("doctor")). Doctor accounts can only be created by a Hospital
-Admin - see routers/hospital_admin.py.
-"""
-
 import datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..deps import get_db, log_audit, require_role
+from ..mailer import send_email
 from ..security import generate_otp, hash_otp
 
 router = APIRouter(prefix="/api/doctor", tags=["doctor"])
+UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"
 
 
 def _my_doctor(db: Session, user: models.User) -> models.Doctor:
@@ -39,26 +29,22 @@ def _find_patient(db: Session, upi: str) -> models.Patient:
 
 
 def get_current_doctor(user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)) -> models.Doctor:
-    """Dependency: resolves the signed-in user straight to their Doctor row,
-    so every route below just asks for `doctor: models.Doctor = Depends(get_current_doctor)`."""
     return _my_doctor(db, user)
 
 
-# ---------------- patient search (SRS 3.2.3 Patient Search and Identification) ----------------
+# ---------------- patient search ----------------
 @router.get("/patients/{upi}")
 def search_patient(upi: str, doctor: models.Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
     patient = _find_patient(db, upi)
     user = patient.user
 
-    # Record that this doctor viewed the patient's public info (SRS 3.1.3 Access History)
     db.add(models.AccessLog(user_id=doctor.user_id, patient_id=patient.id, access_type="viewed_public"))
     db.commit()
 
     public_records = [
-        {"id": r.id, "information_type": r.information_type, "title": r.title, "information_date": r.information_date}
+        {"id": r.id, "information_type": r.information_type, "title": r.title, "information_date": r.information_date, "has_file": bool(r.file_path)}
         for r in patient.records if r.visibility == "Public"
     ]
-    # Is there an already-approved, not-yet-expired consent for THIS doctor + patient?
     approved = (
         db.query(models.Consent)
         .filter(
@@ -75,7 +61,7 @@ def search_patient(upi: str, doctor: models.Doctor = Depends(get_current_doctor)
         "private_access_approved": bool(approved),
         "private_records": (
             [
-                {"id": r.id, "information_type": r.information_type, "title": r.title, "details": r.details}
+                {"id": r.id, "information_type": r.information_type, "title": r.title, "details": r.details, "has_file": bool(r.file_path)}
                 for r in patient.records if r.visibility == "Private"
             ]
             if approved else []
@@ -83,7 +69,26 @@ def search_patient(upi: str, doctor: models.Doctor = Depends(get_current_doctor)
     }
 
 
-# ---------------- request private access + OTP (SRS 3.2.3 Private Record Access and Consent) ----------------
+@router.get("/records/{record_id}/file")
+def get_record_file(record_id: int, doctor: models.Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
+    record = db.query(models.MedicalInformation).filter(models.MedicalInformation.id == record_id).first()
+    if not record or not record.file_path:
+        raise HTTPException(404, "No file attached to this record.")
+    if record.visibility == "Private":
+        approved = (
+            db.query(models.Consent)
+            .filter(
+                models.Consent.patient_id == record.patient_id, models.Consent.doctor_id == doctor.id,
+                models.Consent.status == "Approved", models.Consent.expires_at > datetime.datetime.utcnow(),
+            )
+            .first()
+        )
+        if not approved:
+            raise HTTPException(403, "You do not have approved access to this private record.")
+    return FileResponse(UPLOAD_DIR / record.file_path)
+
+
+# ---------------- request private access + OTP ----------------
 @router.post("/access-requests")
 def request_access(data: schemas.AccessRequestIn, user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)):
     doctor = _my_doctor(db, user)
@@ -106,15 +111,17 @@ def request_access(data: schemas.AccessRequestIn, user: models.User = Depends(re
     db.commit()
 
     log_audit(db, user.id, "Doctor requested private record access", "access_request", req.id, patient.upi)
-    return {
-        "ok": True, "request_id": req.id,
-        # DEMO ONLY: normally this OTP would be sent to the patient by SMS, not
-        # returned here. No SMS provider is configured yet (see README).
-        "demo_otp_for_patient": otp_code,
-    }
+
+    sent = send_email(
+        patient.user.email, "CDHRS: a doctor wants to see your private records",
+        f"{user.full_name} asked to view your private records ({data.purpose}).\n"
+        f"To approve, open the Consent and Privacy tab and enter this code: {otp_code}\n"
+        "The code expires in 10 minutes. If you do not recognise this request, choose Reject.",
+    )
+    return {"ok": True, "request_id": req.id, "emailed": sent, "demo_otp_for_patient": None if sent else otp_code}
 
 
-# ---------------- prescriptions / medical records (SRS 3.2.3 Medical Record Management) ----------------
+# ---------------- prescriptions / medical records ----------------
 @router.post("/prescriptions")
 def add_prescription(data: schemas.PrescriptionIn, user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)):
     doctor = _my_doctor(db, user)
@@ -132,7 +139,7 @@ def add_prescription(data: schemas.PrescriptionIn, user: models.User = Depends(r
     return {"ok": True, "id": record.id}
 
 
-# ---------------- emergency access (SRS 3.2.3 Emergency Access Management) ----------------
+# ---------------- emergency access ----------------
 @router.post("/emergency-access")
 def emergency_access(data: schemas.EmergencyAccessIn, user: models.User = Depends(require_role("doctor")), db: Session = Depends(get_db)):
     if not data.reason.strip():
@@ -152,8 +159,7 @@ def emergency_access(data: schemas.EmergencyAccessIn, user: models.User = Depend
     ]
     return {"ok": True, "records": private_records}
 
-
-# ---------------- doctor's own activity log (SRS 3.1.3 Access History, applied to the doctor's actions) ----------------
+# ---------------- doctor's own activity log ----------------
 @router.get("/activity-log")
 def my_activity_log(doctor: models.Doctor = Depends(get_current_doctor), db: Session = Depends(get_db)):
     logs = (

@@ -11,6 +11,7 @@ from .database import Base
 def now():
     return datetime.datetime.utcnow()
 
+
 # hospital table  
 class Hospital(Base):
     __tablename__ = "hospitals"
@@ -105,9 +106,32 @@ class Patient(Base):
     user = relationship("User", back_populates="patient_profile")
     records = relationship("MedicalInformation", back_populates="patient")
 
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    upi = Column(String(20), unique=True, nullable=False)  # Unique Patient ID, e.g. P-000178
+    date_of_birth = Column(String(20), default="")
+    blood_group = Column(String(10), default="")
+    address = Column(String(255), default="")
+    profile_visibility = Column(String(10), default="Public")  # Public | Private (SRS 3.1.3 Data Visibility Mgmt)
 
-# doctor base suzana add korbe
+    user = relationship("User", back_populates="patient_profile")
+    records = relationship("MedicalInformation", back_populates="patient")
 
+# doctor base
+class Doctor(Base):
+    """Doctor-specific fields. One-to-one with User (role='doctor').
+    IMPORTANT (SRS 3.2 + 3.4.2): doctors do NOT self-register - a Hospital
+    Admin creates this row (see routers/hospital_admin.py)."""
+    __tablename__ = "doctors"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    hospital_id = Column(Integer, ForeignKey("hospitals.id"), nullable=False)
+    specialization = Column(String(100), default="")
+    verification_status = Column(String(20), default="Active")  # Active | Blocked
+
+    user = relationship("User", back_populates="doctor_profile")
+    hospital = relationship("Hospital", back_populates="doctors")
 
 
 # hospital admin profile  table 

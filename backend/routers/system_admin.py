@@ -1,12 +1,11 @@
-import datetime
-import shutil
-from pathlib import Path
 
-from fastapi import APIRouter, Depends
+import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import models
-from ..database import SQLALCHEMY_DATABASE_URL
+from .. import models, schemas
+from ..backup import BackupError, list_backups, make_backup
 from ..deps import get_db, log_audit, require_role
 
 router = APIRouter(prefix="/api/system-admin", tags=["system-admin"])
@@ -19,27 +18,211 @@ def overview(user: models.User = Depends(require_role("system_admin")), db: Sess
         "total_records_accessed": db.query(models.AccessLog).count(),
     }
 
+
 @router.get("/rbac")
 def rbac(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
     roles = db.query(models.Role).all()
     out = []
     for role in roles:
-        user_count = db.query(models.UserRole).filter(models.UserRole.role_id == role.id).count()
+        user_count = db.query(models.UserRole).filter(
+            models.UserRole.role_id == role.id
+        ).count()
+
         perms = (
             db.query(models.Permission)
-            .join(models.RolePermission, models.RolePermission.permission_id == models.Permission.id)
+            .join(
+                models.RolePermission,
+                models.RolePermission.permission_id == models.Permission.id
+            )
             .filter(models.RolePermission.role_id == role.id)
             .all()
         )
-        out.append({"role": role.name, "users": user_count, "permissions": ", ".join(p.name for p in perms)})
+
+        out.append({
+            "id": role.id,
+            "role": role.name,
+            "users": user_count,
+            "permissions": ", ".join(p.name for p in perms)
+        })
     return out
 
 
-@router.get("/hospitals")
-def hospitals(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
-    rows = db.query(models.Hospital).all()
-    return [{"id": h.id, "name": h.name, "status": h.status, "doctors": len(h.doctors)} for h in rows]
 
+
+
+
+
+
+
+
+
+
+
+
+@router.get("/users")
+def all_users(
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    rows = db.query(models.User).order_by(models.User.id).all()
+    out = []
+
+    for u in rows:
+        hospital_name = ""
+
+        if u.role == "doctor" and u.doctor_profile:
+            hospital_name = u.doctor_profile.hospital.name
+        elif u.role == "hospital_admin" and u.hospital_admin_profile:
+            hospital_name = u.hospital_admin_profile.hospital.name
+
+        out.append({
+            "id": u.id,
+            "full_name": u.full_name,
+            "email": u.email,
+            "role": u.role,
+            "hospital_name": hospital_name,
+            "status": u.status
+        })
+
+    return out
+
+
+@router.patch("/users/{user_id}/status")
+def set_user_status(
+    user_id: int,
+    data: schemas.UserStatusIn,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    if data.status not in ("Active", "Blocked"):
+        raise HTTPException(400, "status must be 'Active' or 'Blocked'.")
+
+    target = db.query(models.User).filter(
+        models.User.id == user_id
+    ).first()
+
+    if not target:
+        raise HTTPException(404, "User not found.")
+
+    if target.id == user.id:
+        raise HTTPException(400, "You cannot block your own account.")
+
+    target.status = data.status
+
+    if target.role == "doctor" and target.doctor_profile:
+        target.doctor_profile.verification_status = data.status
+
+    db.commit()
+
+    log_audit(
+        db, user.id,
+        f"System Admin set user status to {data.status}",
+        "user", target.id, target.email
+    )
+    return {"ok": True}
+
+
+@router.get("/hospitals")
+def hospitals(
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    rows = db.query(models.Hospital).all()
+    return [
+        {
+            "id": h.id,
+            "name": h.name,
+            "address": h.address,
+            "phone": h.phone,
+            "status": h.status,
+            "doctors": len(h.doctors)
+        }
+        for h in rows
+    ]
+    
+    
+@router.post("/hospitals")
+def create_hospital(
+    data: schemas.HospitalCreateIn,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    name = data.name.strip()
+
+    if not name:
+        raise HTTPException(400, "Hospital name is required.")
+
+    h = models.Hospital(
+        name=name,
+        address=data.address.strip(),
+        phone=data.phone.strip()
+    )
+    db.add(h)
+    db.commit()
+    db.refresh(h)
+
+    log_audit(
+        db, user.id, "System Admin created a hospital",
+        "hospital", h.id, h.name
+    )
+    return {"ok": True, "id": h.id}
+
+
+@router.patch("/hospitals/{hospital_id}")
+def update_hospital(
+    hospital_id: int,
+    data: schemas.HospitalUpdateIn,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    h = db.query(models.Hospital).filter(
+        models.Hospital.id == hospital_id
+    ).first()
+
+    if not h:
+        raise HTTPException(404, "Hospital not found.")
+
+    if data.name is not None and data.name.strip():
+        h.name = data.name.strip()
+    if data.address is not None:
+        h.address = data.address.strip()
+    if data.phone is not None:
+        h.phone = data.phone.strip()
+
+    db.commit()
+
+    log_audit(
+        db, user.id, "System Admin updated a hospital",
+        "hospital", h.id, h.name
+    )
+    return {"ok": True}
+
+
+@router.patch("/hospitals/{hospital_id}/status")
+def set_hospital_status(
+    hospital_id: int,
+    status: str,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    if status not in ("Active", "Suspended"):
+        raise HTTPException(400, "status must be 'Active' or 'Suspended'.")
+
+    h = db.query(models.Hospital).filter(
+        models.Hospital.id == hospital_id
+    ).first()
+
+    if not h:
+        raise HTTPException(404, "Hospital not found.")
+
+    h.status = status
+    db.commit()
+
+    log_audit(
+        db, user.id, f"System Admin set hospital status to {status}",
+        "hospital", h.id, h.name
+    )
+    return {"ok": True, "status": status}
 
 @router.get("/audit-log")
 def audit_log(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
@@ -79,3 +262,56 @@ def backup(user: models.User = Depends(require_role("system_admin")), db: Sessio
             note = f"SQLite backup saved to {dest.name}"
     log_audit(db, user.id, "Manual database backup triggered", details=note)
     return {"ok": True, "message": note}
+
+
+
+STARTED_AT = datetime.datetime.utcnow()
+
+
+@router.get("/usage")
+def usage(
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    today = datetime.datetime.utcnow().date()
+    days = [
+        today - datetime.timedelta(days=n)
+        for n in range(6, -1, -1)
+    ]
+    since = datetime.datetime.combine(days[0], datetime.time.min)
+
+    logins = {day: 0 for day in days}
+    accesses = {day: 0 for day in days}
+
+    login_rows = db.query(models.AuditLog).filter(
+        models.AuditLog.action == "Login",
+        models.AuditLog.timestamp >= since
+    ).all()
+
+    for row in login_rows:
+        if row.timestamp.date() in logins:
+            logins[row.timestamp.date()] += 1
+
+    access_rows = db.query(models.AccessLog).filter(
+        models.AccessLog.accessed_at >= since
+    ).all()
+
+    for row in access_rows:
+        if row.accessed_at.date() in accesses:
+            accesses[row.accessed_at.date()] += 1
+
+    minutes = int(
+        (datetime.datetime.utcnow() - STARTED_AT).total_seconds() // 60
+    )
+
+    return {
+        "days": [
+            {
+                "date": day.strftime("%b %d"),
+                "logins": logins[day],
+                "record_accesses": accesses[day]
+            }
+            for day in days
+        ],
+        "uptime": f"{minutes // 60}h {minutes % 60}m"
+    }
