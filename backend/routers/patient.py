@@ -55,6 +55,7 @@ def set_visibility(data: schemas.VisibilityIn, user: models.User = Depends(requi
 
 # ---------------- medical records (SRS 3.1.3 Medical Record Management) ----------------
 """listing"""
+'''sprint-4'''
 @router.get("/records")
 def list_records(user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
     p = _my_patient(db, user)
