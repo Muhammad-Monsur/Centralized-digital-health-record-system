@@ -18,19 +18,32 @@ def overview(user: models.User = Depends(require_role("system_admin")), db: Sess
         "total_records_accessed": db.query(models.AccessLog).count(),
     }
 
+
 @router.get("/rbac")
 def rbac(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
     roles = db.query(models.Role).all()
     out = []
     for role in roles:
-        user_count = db.query(models.UserRole).filter(models.UserRole.role_id == role.id).count()
+        user_count = db.query(models.UserRole).filter(
+            models.UserRole.role_id == role.id
+        ).count()
+
         perms = (
             db.query(models.Permission)
-            .join(models.RolePermission, models.RolePermission.permission_id == models.Permission.id)
+            .join(
+                models.RolePermission,
+                models.RolePermission.permission_id == models.Permission.id
+            )
             .filter(models.RolePermission.role_id == role.id)
             .all()
         )
-        out.append({"role": role.name, "users": user_count, "permissions": ", ".join(p.name for p in perms)})
+
+        out.append({
+            "id": role.id,
+            "role": role.name,
+            "users": user_count,
+            "permissions": ", ".join(p.name for p in perms)
+        })
     return out
 
 
