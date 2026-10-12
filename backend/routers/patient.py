@@ -1,6 +1,9 @@
 import datetime
+import uuid
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
@@ -8,6 +11,11 @@ from ..deps import get_db, log_audit, require_role
 from ..security import generate_otp, hash_otp
 
 router = APIRouter(prefix="/api/patient", tags=["patient"])
+
+UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".webp"}
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB per file
 
 
 def _my_patient(db: Session, user: models.User) -> models.Patient:
@@ -77,7 +85,7 @@ def list_records(user: models.User = Depends(require_role("patient")), db: Sessi
         {
             "id": r.id, "information_type": r.information_type, "title": r.title, "details": r.details,
             "visibility": r.visibility, "information_date": r.information_date,
-            "doctor_name": r.doctor.user.full_name if r.doctor else "",
+            "doctor_name": r.doctor.user.full_name if r.doctor else "", "has_file": bool(r.file_path),
         }
         for r in records
     ]
@@ -85,9 +93,7 @@ def list_records(user: models.User = Depends(require_role("patient")), db: Sessi
 
 @router.post("/records")
 def add_record(data: schemas.RecordCreateIn, user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
-    """Patient uploads their own report (SRS 3.1.7 'Upload PDFs and photos of
-    paper reports'). Actual file storage (not just metadata) is planned for
-    next phase - see README "Not built yet"."""
+    """Add a record with no attached file (text/metadata only)."""
     p = _my_patient(db, user)
     record = models.MedicalInformation(
         patient_id=p.id, information_type=data.information_type, title=data.title,
@@ -97,6 +103,52 @@ def add_record(data: schemas.RecordCreateIn, user: models.User = Depends(require
     db.commit()
     log_audit(db, user.id, "Patient added a medical record", "medical_information", record.id, data.title)
     return {"ok": True, "id": record.id}
+
+
+@router.post("/records/upload")
+def add_record_with_file(
+    information_type: str = Form(...), title: str = Form(...), details: str = Form(""),
+    visibility: str = Form("Public"), file: UploadFile | None = None,
+    user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db),
+):
+    """Same as POST /records but accepts an actual file (SRS 3.1.7 'Upload
+    PDFs and photos of paper reports'). The file is saved under /uploads
+    with a random name (never the original filename, to avoid collisions
+    and path tricks) and is only ever served back through the protected
+    /records/{id}/file endpoints below - never as a plain static URL - so
+    visibility/consent rules still apply to the file itself."""
+    p = _my_patient(db, user)
+    file_path = ""
+    if file and file.filename:
+        ext = Path(file.filename).suffix.lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(400, f"Unsupported file type '{ext}'. Allowed: PDF, PNG, JPG, WEBP.")
+        content = file.file.read()
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(400, "File is too large. Maximum size is 10 MB.")
+        safe_name = f"{uuid.uuid4().hex}{ext}"
+        dest = UPLOAD_DIR / safe_name
+        with open(dest, "wb") as out:
+            out.write(content)
+        file_path = safe_name
+
+    record = models.MedicalInformation(
+        patient_id=p.id, information_type=information_type, title=title,
+        details=details, visibility=visibility, file_path=file_path,
+    )
+    db.add(record)
+    db.commit()
+    log_audit(db, user.id, "Patient added a medical record" + (" with a file" if file_path else ""), "medical_information", record.id, title)
+    return {"ok": True, "id": record.id, "has_file": bool(file_path)}
+
+
+@router.get("/records/{record_id}/file")
+def get_own_record_file(record_id: int, user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
+    p = _my_patient(db, user)
+    record = db.query(models.MedicalInformation).filter(models.MedicalInformation.id == record_id, models.MedicalInformation.patient_id == p.id).first()
+    if not record or not record.file_path:
+        raise HTTPException(404, "No file attached to this record.")
+    return FileResponse(UPLOAD_DIR / record.file_path)
 
 
 # ---------------- consent / access requests (SRS 3.1.3 Consent Management) ----------------
@@ -109,13 +161,15 @@ def list_access_requests(user: models.User = Depends(require_role("patient")), d
         .order_by(models.AccessRequest.requested_at.desc())
         .all()
     )
-    return [
-        {
+    out = []
+    for r in requests:
+        consent = db.query(models.Consent).filter(models.Consent.request_id == r.id).first()
+        out.append({
             "id": r.id, "doctor_name": r.doctor.user.full_name, "purpose": r.purpose,
             "status": r.status, "requested_at": r.requested_at,
-        }
-        for r in requests
-    ]
+            "expires_at": consent.expires_at if consent and consent.status == "Approved" else None,
+        })
+    return out
 
 
 @router.post("/access-requests/{request_id}/decision")
@@ -161,6 +215,67 @@ def decide_access_request(
     db.commit()
     log_audit(db, user.id, "Patient approved access request", "access_request", req.id)
     return {"ok": True, "status": "Approved"}
+
+
+@router.post("/access-requests/{request_id}/revoke")
+def revoke_access(request_id: int, user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
+    """Patient takes back previously-approved consent early (SRS 3.1 'Approve,
+    reject, or revoke access to private information')."""
+    p = _my_patient(db, user)
+    req = db.query(models.AccessRequest).filter(models.AccessRequest.id == request_id, models.AccessRequest.patient_id == p.id).first()
+    if not req or req.status != "Approved":
+        raise HTTPException(400, "Only an approved request can be revoked.")
+    consent = db.query(models.Consent).filter(models.Consent.request_id == req.id).first()
+    consent.status = "Revoked"
+    consent.revoked_at = datetime.datetime.utcnow()
+    req.status = "Expired"
+    db.commit()
+    log_audit(db, user.id, "Patient revoked access", "access_request", req.id)
+    return {"ok": True}
+
+
+# ---------------- hospital record sharing (Sprint 4 - SRS 3.3 Inter-Hospital Access) ----------------
+@router.get("/sharing-requests")
+def list_sharing_requests(user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db)):
+    """Other hospitals asking to see this patient's records."""
+    p = _my_patient(db, user)
+    rows = (
+        db.query(models.HospitalShareRequest)
+        .filter(models.HospitalShareRequest.patient_id == p.id)
+        .order_by(models.HospitalShareRequest.requested_at.desc())
+        .all()
+    )
+    return [
+        {"id": r.id, "hospital_name": r.hospital.name, "status": r.status, "requested_at": r.requested_at}
+        for r in rows
+    ]
+
+
+@router.post("/sharing-requests/{request_id}/decision")
+def decide_sharing_request(
+    request_id: int, data: schemas.SharingDecisionIn,
+    user: models.User = Depends(require_role("patient")), db: Session = Depends(get_db),
+):
+    """Approve a pending request, reject it, or (approve=false on an already
+    approved one) revoke it. No OTP here - keeping this flow simple."""
+    p = _my_patient(db, user)
+    req = db.query(models.HospitalShareRequest).filter(
+        models.HospitalShareRequest.id == request_id, models.HospitalShareRequest.patient_id == p.id
+    ).first()
+    if not req:
+        raise HTTPException(404, "Sharing request not found.")
+
+    if req.status == "Pending":
+        req.status = "Approved" if data.approve else "Rejected"
+    elif req.status == "Approved" and not data.approve:
+        req.status = "Revoked"
+    else:
+        raise HTTPException(400, "This request can no longer be changed.")
+
+    req.decided_at = datetime.datetime.utcnow()
+    db.commit()
+    log_audit(db, user.id, f"Patient set hospital sharing to {req.status}", "hospital_share_request", req.id, req.hospital.name)
+    return {"ok": True, "status": req.status}
 
 
 # ---------------- activity log (SRS 3.1.3 Access History Management) ----------------
