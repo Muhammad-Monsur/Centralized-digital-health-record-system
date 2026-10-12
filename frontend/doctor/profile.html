@@ -15,9 +15,11 @@
   <div class="portal-body">
     <div class="sidebar">
       <div class="side-item active" data-tab="search">🔍 Patient Search</div>
+      <div class="side-item" data-tab="profile">🧑 My Profile</div>
       <div class="side-item" data-tab="prescription">💊 Prescription</div>
       <div class="side-item" data-tab="reports">📋 Medical Reports</div>
       <div class="side-item" data-tab="lab">🧪 Lab Reports</div>
+      <div class="side-item" data-tab="requests">📨 My Requests</div>
       <div class="side-item" data-tab="emergency">🚨 Emergency Access</div>
       <div class="side-item" data-tab="activity">🕒 Activity Log</div>
     </div>
@@ -72,7 +74,7 @@
             <input type="text" class="patient-context-input" placeholder="Patient ID, e.g. P-000178" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid var(--bg-soft);background:#F7F8FE;font-size:14px;">
             <button type="submit" class="btn btn-outline">Load</button>
           </div>
-          <table><tr><th>Title</th><th>Type</th><th>Visibility</th></tr><tbody id="tab-reportsBody"><tr><td colspan="3" class="empty-row">Search a patient to see their records.</td></tr></tbody></table>
+          <table><tr><th>Title</th><th>Type</th><th>Visibility</th><th>File</th></tr><tbody id="tab-reportsBody"><tr><td colspan="4" class="empty-row">Search a patient to see their records.</td></tr></tbody></table>
         </form>
       </section>
 
@@ -83,8 +85,36 @@
             <input type="text" class="patient-context-input" placeholder="Patient ID, e.g. P-000178" style="flex:1;padding:13px 16px;border-radius:12px;border:1.5px solid var(--bg-soft);background:#F7F8FE;font-size:14px;">
             <button type="submit" class="btn btn-outline">Load</button>
           </div>
-          <table><tr><th>Title</th><th>Type</th><th>Visibility</th></tr><tbody id="tab-labBody"><tr><td colspan="3" class="empty-row">Search a patient to see their lab reports.</td></tr></tbody></table>
+          <table><tr><th>Title</th><th>Type</th><th>Visibility</th><th>File</th></tr><tbody id="tab-labBody"><tr><td colspan="4" class="empty-row">Search a patient to see their lab reports.</td></tr></tbody></table>
         </form>
+      </section>
+
+      <section id="tab-profile" class="tab-panel">
+        <div class="card">
+          <div class="card-head"><div class="title">🧑 My Profile</div></div>
+          <div class="info-row"><span class="k">👤 Full name</span><span class="v" id="dpName">—</span></div>
+          <div class="info-row"><span class="k">✉️ Email</span><span class="v" id="dpEmail">—</span></div>
+          <div class="info-row"><span class="k">🩺 Specialization</span><span class="v" id="dpSpecialization">—</span></div>
+          <div class="info-row"><span class="k">🏥 Hospital</span><span class="v" id="dpHospital">—</span></div>
+          <div class="info-row"><span class="k">🏬 Department</span><span class="v" id="dpDepartment">—</span></div>
+          <div class="info-row"><span class="k">⚙️ Status</span><span class="v" id="dpStatus">—</span></div>
+          <div class="small-muted" style="margin-top:8px;">Specialization, hospital and department are set by your Hospital Admin.</div>
+        </div>
+        <form id="doctorProfileForm" class="card">
+          <div class="card-head"><div class="title">✏️ Update Contact Info</div></div>
+          <div class="field"><label>Phone</label><input type="tel" name="phone" placeholder="+880 1XXX XXXXXX"></div>
+          <div id="doctorProfileMsg" class="form-error" hidden></div>
+          <button type="submit" class="btn btn-primary btn-block">Save</button>
+        </form>
+      </section>
+
+      <section id="tab-requests" class="tab-panel">
+        <div class="card">
+          <div class="card-head"><div class="title">📨 My Access Requests</div></div>
+          <div class="table-tools"><select id="requestStatusFilter"><option value="">All statuses</option><option>Pending</option><option>Approved</option><option>Rejected</option><option>Expired</option></select></div>
+          <table><tr><th>Patient ID</th><th>Purpose</th><th>Status</th><th>Requested</th></tr><tbody id="myRequestsBody"><tr><td colspan="4" class="empty-row">Loading…</td></tr></tbody></table>
+          <div id="myRequestsPager" class="pager"></div>
+        </div>
       </section>
 
       <section id="tab-emergency" class="tab-panel">
@@ -102,6 +132,7 @@
         <div class="card">
           <div class="card-head"><div class="title">🕒 My Activity Log</div></div>
           <table><tr><th>Patient ID</th><th>Access Type</th><th>When</th></tr><tbody id="doctorActivityBody"><tr><td colspan="3" class="empty-row">Loading…</td></tr></tbody></table>
+          <div id="doctorActivityPager" class="pager"></div>
         </div>
       </section>
 
