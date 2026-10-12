@@ -198,6 +198,31 @@ def update_hospital(
     return {"ok": True}
 
 
+@router.patch("/hospitals/{hospital_id}/status")
+def set_hospital_status(
+    hospital_id: int,
+    status: str,
+    user: models.User = Depends(require_role("system_admin")),
+    db: Session = Depends(get_db)
+):
+    if status not in ("Active", "Suspended"):
+        raise HTTPException(400, "status must be 'Active' or 'Suspended'.")
+
+    h = db.query(models.Hospital).filter(
+        models.Hospital.id == hospital_id
+    ).first()
+
+    if not h:
+        raise HTTPException(404, "Hospital not found.")
+
+    h.status = status
+    db.commit()
+
+    log_audit(
+        db, user.id, f"System Admin set hospital status to {status}",
+        "hospital", h.id, h.name
+    )
+    return {"ok": True, "status": status}
 
 @router.get("/audit-log")
 def audit_log(user: models.User = Depends(require_role("system_admin")), db: Session = Depends(get_db)):
