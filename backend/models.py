@@ -106,6 +106,13 @@ class Patient(Base):
     user = relationship("User", back_populates="patient_profile")
     records = relationship("MedicalInformation", back_populates="patient")
 
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    upi = Column(String(20), unique=True, nullable=False)  # Unique Patient ID, e.g. P-000178
+    date_of_birth = Column(String(20), default="")
+    blood_group = Column(String(10), default="")
+    address = Column(String(255), default="")
+    profile_visibility = Column(String(10), default="Public")  # Public | Private (SRS 3.1.3 Data Visibility Mgmt)
 
 # doctor base
 class Doctor(Base):
