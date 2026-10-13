@@ -114,9 +114,6 @@ class Patient(Base):
     address = Column(String(255), default="")
     profile_visibility = Column(String(10), default="Public")  # Public | Private (SRS 3.1.3 Data Visibility Mgmt)
 
-    user = relationship("User", back_populates="patient_profile")
-    records = relationship("MedicalInformation", back_populates="patient")
-
 # doctor base
 class Doctor(Base):
     """Doctor-specific fields. One-to-one with User (role='doctor').
