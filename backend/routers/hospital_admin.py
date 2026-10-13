@@ -11,6 +11,7 @@ Every Hospital Admin is tied to exactly one Hospital (their
 `hospital_id`), and can only manage doctors within that hospital.
 
 """
+import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -53,7 +54,7 @@ def create_doctor(
     db.add(doctor_user)
     db.flush()
 
-    doctor = models.Doctor(user_id=doctor_user.id, hospital_id=admin.hospital_id, specialization=data.specialization)
+    doctor = models.Doctor(user_id=doctor_user.id, hospital_id=admin.hospital_id, specialization=data.specialization , department_id=data.department_id)
     db.add(doctor)
     db.commit()
     db.refresh(doctor)
@@ -69,9 +70,35 @@ def list_doctors(admin: models.HospitalAdminProfile = Depends(get_current_admin)
         {
             "id": d.id, "user_id": d.user_id, "full_name": d.user.full_name, "email": d.user.email,
             "specialization": d.specialization, "status": d.verification_status,
+            "department_id": d.department_id, "department_name": d.department.name if d.department else "Unassigned",
         }
         for d in doctors
     ]
+
+@router.post("/doctors/{doctor_id}/role")
+def assign_role(
+    doctor_id: int, data: schemas.RoleAssignIn,
+    admin: models.HospitalAdminProfile = Depends(get_current_admin),
+    user: models.User = Depends(require_role("hospital_admin")),
+    db: Session = Depends(get_db),
+):
+   
+    doctor = db.query(models.Doctor).filter(models.Doctor.id == doctor_id, models.Doctor.hospital_id == admin.hospital_id).first()
+    if not doctor:
+        raise HTTPException(404, "Doctor not found at your hospital.")
+    role = db.query(models.Role).filter(models.Role.id == data.role_id).first()
+    if not role:
+        raise HTTPException(404, "Role not found.")
+    existing = db.query(models.UserRole).filter(models.UserRole.user_id == doctor.user_id, models.UserRole.role_id == role.id).first()
+    if not existing:
+        db.add(models.UserRole(user_id=doctor.user_id, role_id=role.id))
+        db.commit()
+    log_audit(db, user.id, f"Assigned role '{role.name}' to doctor", "doctor", doctor.id, doctor.user.email)
+    return {"ok": True}
+
+
+# add role , hospital details 
+
 
 
 @router.patch("/doctors/{doctor_id}/status")
@@ -107,31 +134,83 @@ def overview(admin: models.HospitalAdminProfile = Depends(get_current_admin), db
 
 
 #  Department Management 
-
 @router.get("/departments")
 def departments(admin: models.HospitalAdminProfile = Depends(get_current_admin), db: Session = Depends(get_db)):
-    doctors = db.query(models.Doctor).filter(models.Doctor.hospital_id == admin.hospital_id).all()
-    counts: dict[str, int] = {}
-    for d in doctors:
-        key = d.specialization or "General"
-        counts[key] = counts.get(key, 0) + 1
-    demo_staff = {"Cardiology": (12, 8), "Medicine": (20, 12), "Orthopedics": (16, 10), "Pediatrics": (10, 8), "Radiology": (8, 6), "General": (6, 4)}
+    
+    depts = db.query(models.Department).filter(models.Department.hospital_id == admin.hospital_id).all()
     return [
-        {"department": name, "doctors": count, "nurses": demo_staff.get(name, (8, 6))[0], "staff": demo_staff.get(name, (8, 6))[1]}
-        for name, count in (counts.items() if counts else [("No departments yet", 0)])
+        {
+            "id": d.id, "department": d.name, "doctors": len(d.doctors),
+            "nurses": d.nurse_count, "staff": d.staff_count,
+        }
+        for d in depts
     ]
+
+# create dept 
+
+
+
+@router.patch("/departments/{department_id}")
+def update_department(
+    department_id: int, data: schemas.DepartmentIn, admin: models.HospitalAdminProfile = Depends(get_current_admin),
+    user: models.User = Depends(require_role("hospital_admin")), db: Session = Depends(get_db),
+):
+    dept = db.query(models.Department).filter(models.Department.id == department_id, models.Department.hospital_id == admin.hospital_id).first()
+    if not dept:
+        raise HTTPException(404, "Department not found at your hospital.")
+    dept.name = data.name.strip() or dept.name
+    dept.nurse_count = data.nurse_count
+    dept.staff_count = data.staff_count
+    db.commit()
+    log_audit(db, user.id, "Hospital Admin updated a department", "department", dept.id, dept.name)
+    return {"ok": True}
+
+
 
 
 # Patient admissions 
 
 @router.get("/admissions")
-def admissions(admin: models.HospitalAdminProfile = Depends(get_current_admin)):
-    
+def admissions(admin: models.HospitalAdminProfile = Depends(get_current_admin), db: Session = Depends(get_db)):
+    rows = db.query(models.Admission).filter(models.Admission.hospital_id == admin.hospital_id).order_by(models.Admission.admitted_on.desc()).all()
     return [
-        {"patient_id": "P-000178", "name": "Tahia Raisa", "ward": "General Ward", "admitted_on": "2026-09-10", "status": "Admitted"},
-        {"patient_id": "P-000182", "name": "Kamal Hossain", "ward": "ICU", "admitted_on": "2026-09-14", "status": "Admitted"},
-        {"patient_id": "P-000150", "name": "Nusrat Jahan", "ward": "Maternity", "admitted_on": "2026-09-01", "status": "Discharged"},
+        {
+            "id": a.id, "patient_id": a.patient.upi, "name": a.patient.user.full_name, "ward": a.ward,
+            "admitted_on": a.admitted_on, "discharged_on": a.discharged_on, "status": a.status,
+        }
+        for a in rows
     ]
+
+
+@router.post("/admissions")
+def admit_patient(
+    data: schemas.AdmissionIn, admin: models.HospitalAdminProfile = Depends(get_current_admin),
+    user: models.User = Depends(require_role("hospital_admin")), db: Session = Depends(get_db),
+):
+    patient = db.query(models.Patient).filter(models.Patient.upi == data.patient_upi).first()
+    if not patient:
+        raise HTTPException(404, "No patient found with that ID.")
+    admission = models.Admission(patient_id=patient.id, hospital_id=admin.hospital_id, ward=data.ward)
+    db.add(admission)
+    db.commit()
+    log_audit(db, user.id, "Hospital Admin admitted a patient", "admission", admission.id, f"{patient.upi} -> {data.ward}")
+    return {"ok": True, "id": admission.id}
+
+
+@router.patch("/admissions/{admission_id}/discharge")
+def discharge_patient(
+    admission_id: int, admin: models.HospitalAdminProfile = Depends(get_current_admin),
+    user: models.User = Depends(require_role("hospital_admin")), db: Session = Depends(get_db),
+):
+    admission = db.query(models.Admission).filter(models.Admission.id == admission_id, models.Admission.hospital_id == admin.hospital_id).first()
+    if not admission:
+        raise HTTPException(404, "Admission record not found at your hospital.")
+    admission.status = "Discharged"
+    admission.discharged_on = datetime.datetime.utcnow()
+    db.commit()
+    log_audit(db, user.id, "Hospital Admin discharged a patient", "admission", admission.id)
+    return {"ok": True}
+
 
 
 # System Monitoring (audit log) 
