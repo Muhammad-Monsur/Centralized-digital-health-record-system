@@ -1,0 +1,8 @@
+/* Core stylesheet entry (every page). Dev: served with @imports. Production:
+   scripts/build_assets.mjs bundles + minifies it; public pages inline it. */
+@import url("tokens.css");
+@import url("base.css");
+@import url("components.css");
+@import url("layout.css");
+@import url("animations.css");
+@import url("print.css");

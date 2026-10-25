@@ -1,0 +1,50 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Clinician overview{% endblock %}
+{% block page_id %}doctor-dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ cu.user.full_name }}</h1>
+    <p>{% if cu.doctor %}{{ cu.doctor.designation }} · {{ cu.doctor.specialization }} · {{ cu.doctor.hospital.name }}{% else %}{{ cu.staff.position }} · {{ cu.staff.hospital.name }}{% endif %}</p></div>
+  {% if cu.can("clinical.patient.search") %}<a class="btn btn-primary" href="/doctor/search">{{ icon("search") }}Find a patient</a>{% endif %}
+</div>
+
+{% if "doctor_pending" in cu.notes %}<div class="alert alert-warning">{{ icon("clock") }}<p><strong>Your licence is waiting for verification.</strong> Clinical features unlock once your hospital administrator verifies it.</p></div>{% endif %}
+{% if "doctor_rejected" in cu.notes %}<div class="alert alert-danger">{{ icon("alert") }}<p><strong>Your licence verification was rejected.</strong> {{ cu.doctor.verification_note or "Contact your hospital administrator." }}</p></div>{% endif %}
+{% if "hospital_inactive" in cu.notes %}<div class="alert alert-danger">{{ icon("hospital") }}<p>Your hospital is currently inactive, so clinical features are disabled.</p></div>{% endif %}
+
+<div class="stat-grid" data-stagger>
+  <div class="stat"><div class="stat-label">{{ icon("users") }}Patients seen (30 days)</div><div class="stat-value" data-count="{{ d.patients_seen_30d }}">{{ d.patients_seen_30d }}</div></div>
+  <div class="stat"><div class="stat-label">{{ icon("key") }}Active consents</div><div class="stat-value" data-count="{{ d.active_consents }}">{{ d.active_consents }}</div><div class="stat-foot">{{ d.pending_requests }} request{{ "s" if d.pending_requests != 1 }} waiting</div></div>
+  <div class="stat"><div class="stat-label">{{ icon("file-plus") }}Records you added</div><div class="stat-value" data-count="{{ d.records_created }}">{{ d.records_created }}</div></div>
+  <div class="stat {{ 'is-alert' if d.emergencies_30d }}"><div class="stat-label">{{ icon("siren") }}Emergency uses (30 days)</div><div class="stat-value" data-count="{{ d.emergencies_30d }}">{{ d.emergencies_30d }}</div><div class="stat-foot">Reviewed by your hospital</div></div>
+</div>
+
+<div class="grid-2">
+  <section class="card" aria-labelledby="aa-h">
+    <div class="card-header"><h2 id="aa-h">Access you hold now</h2></div>
+    {% if d.active_access %}
+    <ul class="timeline">
+      {% for a in d.active_access %}
+      <li class="{{ 'is-archived' if a.kind == 'emergency' else 'is-created' }}">
+        <a href="/doctor/patients/{{ a.upi }}"><strong>{{ a.name }}</strong></a> <span class="small muted upi">{{ a.upi }}</span>
+        {% if a.kind == "emergency" %}<span class="badge badge-emergency"><span class="pulse-dot" aria-hidden="true"></span>Emergency</span>{% else %}<span class="badge badge-info">Consent</span>{% endif %}
+        <div class="when">Until {{ a.until|dt }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted small">No active consents. Request access from a patient's page when you need their private records.</p>{% endif %}
+  </section>
+  <section class="card" aria-labelledby="rp-h">
+    <div class="card-header"><h2 id="rp-h">Recently opened</h2></div>
+    {% if d.recent %}
+    <ul class="record-list">
+      {% for r in d.recent %}
+      <li class="record-row" style="padding:.6rem 0"><span class="ri">{{ icon("user") }}</span>
+        <div class="rt"><a href="/doctor/patients/{{ r.upi }}">{{ r.name }}</a><div class="rm"><span class="upi">{{ r.upi }}</span><span>{{ r.last|dt }}</span></div></div><span></span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted small">Patients you open will appear here.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

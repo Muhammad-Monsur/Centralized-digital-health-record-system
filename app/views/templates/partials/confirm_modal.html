@@ -1,0 +1,15 @@
+{% from "partials/macros.html" import icon %}
+{# One reusable confirmation dialog, driven by js/core/ui.js confirmDialog(). #}
+<div class="modal" id="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-body" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-dialog">
+    <div class="modal-icon" data-confirm-icon>{{ icon("alert") }}</div>
+    <h2 id="confirm-title" data-confirm-title>Are you sure?</h2>
+    <p id="confirm-body" class="muted" data-confirm-body></p>
+    <div data-confirm-extra></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-confirm-cancel>Cancel</button>
+      <button type="button" class="btn btn-danger" data-confirm-ok>Confirm</button>
+    </div>
+  </div>
+</div>

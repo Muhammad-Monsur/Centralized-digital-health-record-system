@@ -1,0 +1,143 @@
+/* Design tokens. Brand colours are fixed by the brief; everything else derives from them.
+   Contrast notes (WCAG AA, 4.5:1 for body text):
+   - #0284C7 accent is 4.1:1 on white, so it is used for fills, icons and large text only;
+     accent *text* uses --accent-text (#0369A1, 5.9:1).
+   - Dark theme values were each checked against --bg / --surface. */
+
+@font-face {
+  font-family: "Public Sans";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/public-sans-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Source Serif 4";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("../fonts/source-serif-4-latin-wght-normal.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light;
+  /* Brand */
+  --primary: #0f4c81;
+  --primary-hover: #0b3c66;
+  --primary-soft: #e3eef8;
+  --accent: #0284c7;
+  --accent-text: #0369a1;
+  --violet: #5b4fc9;
+  --violet-soft: #ecebfb;
+
+  /* Surfaces */
+  --bg: #ffffff;
+  --bg-tint: #f0f9ff;
+  --surface: #ffffff;
+  --surface-2: #f6f9fc;
+  --surface-sunk: #eef3f8;
+  --border: #cbd5e1;
+  --border-soft: #e2e8f0;
+
+  /* Text */
+  --text: #1e293b;
+  --text-muted: #475569;
+  --text-faint: #64748b;
+  --on-primary: #ffffff;
+
+  /* Status */
+  --success: #166534;   /* 6.3:1 on --success-soft (#15803d was 4.49:1) */
+  --success-soft: #e7f6ec;
+  --warning: #a16207;
+  --warning-soft: #fdf5dc;
+  --danger: #b91c1c;
+  --danger-soft: #fdecec;
+  --emergency: #c2410c;
+  --emergency-soft: #fff1e6;
+
+  /* Gradients (subtle) */
+  --grad-brand: linear-gradient(120deg, #0f4c81 0%, #0284c7 55%, #5b4fc9 100%);
+  --grad-wash: radial-gradient(1100px 520px at 85% -10%, rgba(91, 79, 201, 0.10), transparent 60%),
+               radial-gradient(900px 480px at -10% 10%, rgba(2, 132, 199, 0.10), transparent 60%);
+
+  /* Type */
+  --font-sans: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.375rem;
+  --fs-xl: 1.75rem;
+  --fs-2xl: clamp(2rem, 1.4rem + 2vw, 2.75rem);
+  --fs-3xl: clamp(2.4rem, 1.6rem + 3.4vw, 3.9rem);
+  --lh-tight: 1.15;
+  --lh-body: 1.6;
+
+  /* Space (4px grid) */
+  --s-1: 0.25rem; --s-2: 0.5rem; --s-3: 0.75rem; --s-4: 1rem; --s-5: 1.5rem;
+  --s-6: 2rem; --s-7: 3rem; --s-8: 4.5rem; --s-9: 7rem;
+
+  /* Shape - radius scales with the element's size/role, not one value everywhere */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+
+  --shadow-1: 0 1px 2px rgba(15, 40, 75, 0.06), 0 1px 1px rgba(15, 40, 75, 0.04);
+  --shadow-2: 0 6px 20px -8px rgba(15, 50, 100, 0.18), 0 2px 6px rgba(15, 40, 75, 0.06);
+  --shadow-3: 0 24px 60px -20px rgba(15, 50, 100, 0.35);
+  --focus: 0 0 0 3px #ffffff, 0 0 0 5px #0284c7;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --t-fast: 140ms;
+  --t-med: 260ms;
+  --t-slow: 520ms;
+
+  --header-h: 68px;
+  --sidebar-w: 264px;
+  --content-max: 1180px;
+}
+
+/* Dark theme: deep navy surfaces, same accents. Applied by [data-theme="dark"],
+   which the no-flash script sets from localStorage or prefers-color-scheme. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --primary: #5aa2e6;          /* lifted so it reads as text/fill on navy (7.0:1 on --bg) */
+  --primary-hover: #7db6ec;
+  --primary-soft: #14304f;
+  --accent: #38bdf8;
+  --accent-text: #7dd3fc;
+  --violet: #a39bf2;
+  --violet-soft: #241f4d;
+
+  --bg: #0a1424;
+  --bg-tint: #0d1a2e;
+  --surface: #0f1e35;
+  --surface-2: #132541;
+  --surface-sunk: #0b182b;
+  --border: #2a3f5e;
+  --border-soft: #1d3050;
+
+  --text: #e6edf6;
+  --text-muted: #a9b8cc;
+  --text-faint: #8a9bb2;
+  --on-primary: #06121f;
+
+  --success: #4ade80; --success-soft: #0f2f22;
+  --warning: #facc15; --warning-soft: #2d2610;
+  --danger: #f87171;  --danger-soft: #3a1518;
+  --emergency: #fb923c; --emergency-soft: #3a1e0c;
+
+  --grad-brand: linear-gradient(120deg, #1d5f9e 0%, #0284c7 55%, #6a5fd6 100%);
+  --grad-wash: radial-gradient(1100px 520px at 85% -10%, rgba(106, 95, 214, 0.18), transparent 60%),
+               radial-gradient(900px 480px at -10% 10%, rgba(2, 132, 199, 0.14), transparent 60%);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px -10px rgba(0, 0, 0, 0.6);
+  --shadow-3: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+  --focus: 0 0 0 3px #0a1424, 0 0 0 5px #38bdf8;
+}

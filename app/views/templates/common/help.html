@@ -1,0 +1,38 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Help centre{% endblock %}
+{% block page_id %}help{% endblock %}
+{% block content %}
+<section class="container" style="padding:3.5rem 0 1rem">
+  <h1>Help centre</h1>
+  <p class="lead">Short answers about records, consent and accounts.</p>
+</section>
+<section class="container grid-2" style="align-items:start">
+  <div>
+    {% for h in help %}
+    <article class="card" id="{{ h.id }}" style="margin-bottom:1rem" data-reveal>
+      <h2 style="font-size:var(--fs-md);font-family:var(--font-sans)">{{ h.title }}</h2>
+      <p class="muted" style="margin:0">{{ h.body }}</p>
+    </article>
+    {% endfor %}
+  </div>
+  <div>
+    <h2 style="font-size:var(--fs-lg)">Frequently asked questions</h2>
+    <div class="accordion">
+      {% for q, a in faq %}
+      <div class="accordion-item" id="faq-{{ loop.index0 }}">
+        <h3 style="margin:0;font-family:var(--font-sans);font-size:inherit">
+          <button type="button" class="accordion-trigger" aria-expanded="false" aria-controls="hfaq-{{ loop.index0 }}" id="hfaq-t-{{ loop.index0 }}">{{ q }}<svg class="chev" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+        </h3>
+        <div class="accordion-panel" id="hfaq-{{ loop.index0 }}" role="region" aria-labelledby="hfaq-t-{{ loop.index0 }}" hidden><div><p>{{ a }}</p></div></div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="card" style="margin-top:1.5rem">
+      <h2 style="font-size:var(--fs-md);font-family:var(--font-sans)">Still stuck?</h2>
+      <p class="muted small">Send us a message and we'll reply by email.</p>
+      <button type="button" class="btn btn-primary" data-open-modal="contact-modal">{{ icon("message") }}Contact us</button>
+    </div>
+  </div>
+</section>
+{% endblock %}

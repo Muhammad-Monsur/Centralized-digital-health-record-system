@@ -1,0 +1,31 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, status_badge, pagination %}
+{% block title %}Consent & access{% endblock %}
+{% block page_id %}admin-access{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Consent & access</h1><p>Requests doctors{{ "" if is_sys else " at your hospital" }} sent to patients, and what came of them. Record contents are never shown here.</p></div>
+  <form method="get"><label class="visually-hidden" for="cs">Status</label>
+    <select class="select" id="cs" name="status" data-autosubmit style="width:auto"><option value="">All statuses</option>{% for s in ("pending","approved","rejected","expired","cancelled") %}<option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}</select></form>
+</div>
+<section class="card card-flush">
+  {% if page.items %}
+  <div class="table-wrap"><table class="table stack">
+    <thead><tr><th scope="col">Doctor</th><th scope="col">Patient</th><th scope="col">Purpose</th><th scope="col">Requested</th><th scope="col">Request</th><th scope="col">Consent</th></tr></thead>
+    <tbody>
+    {% for r in page.items %}{% set c = consents.get(r.request_id) %}
+    <tr>
+      <td data-label="Doctor"><strong>{{ r.doctor.user.full_name }}</strong><div class="small muted">{{ r.doctor.hospital.name }}</div></td>
+      <td data-label="Patient" class="upi">{{ r.patient.upi }}</td>
+      <td data-label="Purpose" style="max-width:320px">{{ r.purpose }}</td>
+      <td data-label="Requested">{{ r.requested_at|dt }}</td>
+      <td data-label="Request">{{ status_badge(r.status.value) }}</td>
+      <td data-label="Consent">{% if c %}{% set live = c.status.value == "active" and c.expires_at and c.expires_at > now %}{{ status_badge("active" if live else ("expired" if c.status.value == "active" else c.status.value)) }}{% if c.expires_at %}<div class="small muted">until {{ c.expires_at|dt }}</div>{% endif %}{% else %}—{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody></table></div>
+  {{ pagination(page, "/admin/access" ~ ("?status=" ~ status if status else "")) }}
+  {% else %}<div class="empty">{{ icon("key") }}<h2>No access requests</h2><p>Requests appear here when doctors ask patients for private records.</p></div>{% endif %}
+</section>
+{% endblock %}

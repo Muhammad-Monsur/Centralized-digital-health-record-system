@@ -1,0 +1,42 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, pagination %}
+{% block title %}Emergency & inter-hospital access{% endblock %}
+{% block page_id %}admin-emergency{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Emergency & inter-hospital access</h1><p>Oversight of access that bypassed patient consent, and of records opened across hospitals.</p></div></div>
+<nav class="tabs" aria-label="Views">
+  <a class="tab" href="/admin/emergency" {% if tab != 'inter' and not active %}aria-current="page"{% endif %}>Emergency access</a>
+  <a class="tab" href="/admin/emergency?active=1" {% if active %}aria-current="page"{% endif %}>Active now</a>
+  <a class="tab" href="/admin/emergency?tab=inter" {% if tab == 'inter' %}aria-current="page"{% endif %}>Inter-hospital access</a>
+</nav>
+<section class="card card-flush">
+  {% if tab == "inter" %}
+    {% if page.items %}
+    <div class="table-wrap"><table class="table stack">
+      <thead><tr><th scope="col">When</th><th scope="col">Clinician</th><th scope="col">From</th><th scope="col">Record written at</th><th scope="col">Patient</th><th scope="col">Basis</th></tr></thead>
+      <tbody>{% for a in page.items %}
+      <tr class="{{ 'is-emergency' if a.emergency_access_id }}"><td data-label="When">{{ a.accessed_at|dt }}</td><td data-label="Clinician"><strong>{{ a.who }}</strong><div class="small muted">{{ a.access_type.value|humanize }} · {{ a.information_type.value|humanize }}</div></td>
+        <td data-label="From">{{ a.from_h }}</td><td data-label="Record at">{{ a.record_h }}</td><td data-label="Patient" class="upi">{{ a.upi }}</td>
+        <td data-label="Basis">{% if a.emergency_access_id %}<span class="badge badge-emergency">Emergency</span>{% elif a.consent_id %}<span class="badge badge-info">Consent</span>{% else %}<span class="badge badge-public">Public record</span>{% endif %}</td></tr>
+      {% endfor %}</tbody></table></div>
+    {{ pagination(page, "/admin/emergency?tab=inter") }}
+    {% else %}<div class="empty">{{ icon("globe") }}<h2>No inter-hospital access yet</h2><p>Shown when a clinician opens a record written at another hospital.</p></div>{% endif %}
+  {% else %}
+    {% if page.items %}
+    <div class="table-wrap"><table class="table stack">
+      <thead><tr><th scope="col">Doctor</th><th scope="col">Patient</th><th scope="col">Reason</th><th scope="col">Started</th><th scope="col">Ends</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody>{% for e in page.items %}{% set live = e.ended_at is none and e.expires_at > now %}
+      <tr class="{{ 'is-emergency' if live }}">
+        <td data-label="Doctor"><strong>{{ e.doctor.user.full_name }}</strong><div class="small muted">{{ e.hospital.name }}</div></td>
+        <td data-label="Patient" class="upi">{{ e.patient.upi }}</td>
+        <td data-label="Reason" style="max-width:340px">{{ e.reason }}</td>
+        <td data-label="Started">{{ e.accessed_at|dt }}</td>
+        <td data-label="Ends">{% if live %}<span class="badge badge-emergency"><span class="pulse-dot" aria-hidden="true"></span>{{ e.expires_at|dt("%I:%M %p") }}</span>{% else %}{{ (e.ended_at or e.expires_at)|dt }}{% if e.ended_at %}<div class="small muted">ended early</div>{% endif %}{% endif %}</td>
+        <td class="actions">{% if live %}<button type="button" class="btn btn-sm btn-emergency" data-admin-end-emergency="{{ e.emergency_access_id }}" data-doctor="{{ e.doctor.user.full_name }}">End now</button>{% endif %}</td>
+      </tr>{% endfor %}</tbody></table></div>
+    {{ pagination(page, "/admin/emergency" ~ ("?active=1" if active else "")) }}
+    {% else %}<div class="empty">{{ icon("siren") }}<h2>{{ "No active emergency access" if active else "No emergency access recorded" }}</h2></div>{% endif %}
+  {% endif %}
+</section>
+{% endblock %}

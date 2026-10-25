@@ -1,0 +1,47 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, status_badge %}
+{% block title %}Hospitals{% endblock %}
+{% block page_id %}admin-hospitals{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ "Hospitals" if can_all else "Your hospital" }}</h1><p>{{ "Each hospital has its own administrator, who creates its doctor and staff accounts." if can_all else "Contact details shown to patients and in audit records." }}</p></div>
+  {% if can_all %}<button type="button" class="btn btn-primary" data-open-modal="hospital-modal">{{ icon("plus") }}Add hospital</button>{% endif %}
+</div>
+<section class="card card-flush">
+  <div class="table-wrap"><table class="table stack">
+    <thead><tr><th scope="col">Hospital</th><th scope="col">Registration</th><th scope="col">Administrators</th><th scope="col">Doctors</th><th scope="col">Staff</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+    {% for row in rows %}{% set h = row.h %}
+    <tr>
+      <td data-label="Hospital"><a href="/admin/hospitals/{{ h.hospital_id }}"><strong>{{ h.name }}</strong></a><div class="small muted">{{ h.address }}</div></td>
+      <td data-label="Registration" class="tnum">{{ h.registration_number }}</td>
+      <td data-label="Administrators">{% if row.admins %}{{ row.admins|join(", ") }}{% else %}<span class="badge badge-warning">None yet</span>{% endif %}</td>
+      <td data-label="Doctors" class="tnum">{{ row.doctors }}</td>
+      <td data-label="Staff" class="tnum">{{ row.staff }}</td>
+      <td data-label="Status">{{ status_badge(h.status.value) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody></table></div>
+</section>
+
+{% if can_all %}
+<div class="modal" id="hospital-modal" role="dialog" aria-modal="true" aria-labelledby="h-title" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-dialog">
+    <button type="button" class="btn btn-ghost btn-icon btn-sm modal-close" data-close-modal aria-label="Close">{{ icon("x") }}</button>
+    <div class="modal-icon">{{ icon("hospital") }}</div>
+    <h2 id="h-title">Add a hospital</h2>
+    <form data-api-form="/api/v1/admin/hospitals" data-redirect novalidate>
+      <div class="field"><label for="h-name">Name<span class="req" aria-hidden="true">*</span></label><input class="input" id="h-name" name="name" required minlength="3" maxlength="150"><p class="error" data-error-for="name" role="alert"></p></div>
+      <div class="form-grid">
+        <div class="field"><label for="h-reg">Registration number<span class="req" aria-hidden="true">*</span></label><input class="input" id="h-reg" name="registration_number" required minlength="3" maxlength="50" placeholder="HOSP-DHK-1234"><p class="error" data-error-for="registration_number" role="alert"></p></div>
+        <div class="field"><label for="h-phone">Phone<span class="req" aria-hidden="true">*</span></label><input class="input" id="h-phone" name="phone" type="tel" required maxlength="20"><p class="error" data-error-for="phone" role="alert"></p></div>
+      </div>
+      <div class="field"><label for="h-addr">Address<span class="req" aria-hidden="true">*</span></label><input class="input" id="h-addr" name="address" required minlength="5" maxlength="255"><p class="error" data-error-for="address" role="alert"></p></div>
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancel</button><button type="submit" class="btn btn-primary">Add hospital</button></div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

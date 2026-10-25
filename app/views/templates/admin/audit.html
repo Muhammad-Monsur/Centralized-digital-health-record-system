@@ -1,0 +1,36 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, pagination %}
+{% block title %}Audit log{% endblock %}
+{% block page_id %}admin-audit{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Audit log</h1><p>{{ "Every security-relevant action in CDHRS." if is_sys else "Actions by your hospital's staff and on your hospital's data." }} Times are shown in {{ settings.display_timezone }}.</p></div>
+  {% if can_export %}<a class="btn" href="/admin/audit/export.csv{{ '?' ~ qs if qs }}" download>{{ icon("download") }}Export CSV</a>{% endif %}
+</div>
+<section class="card card-flush">
+  <form class="filters" method="get" role="search" aria-label="Filter audit log">
+    <div class="field"><label for="fa">Area</label><select class="select" id="fa" name="action" data-autosubmit><option value="">All areas</option>{% for k, l in groups.items() %}<option value="{{ k }}." {% if f.action == k ~ "." %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="fu">User</label><input class="input" id="fu" name="user" value="{{ f.user }}" maxlength="80" placeholder="Name or email"></div>
+    <div class="field grow"><label for="fq">Search</label><input class="input" id="fq" type="search" name="q" value="{{ f.q }}" maxlength="80" placeholder="Action, entity, ID or IP"></div>
+    <div class="field"><label for="ff">From</label><input class="input" id="ff" type="date" name="date_from" value="{{ f.date_from }}"></div>
+    <div class="field"><label for="ft">To</label><input class="input" id="ft" type="date" name="date_to" value="{{ f.date_to }}"></div>
+    <button class="btn" type="submit">{{ icon("filter") }}Apply</button>
+  </form>
+  {% if page.items %}
+  <div class="table-wrap"><table class="table stack">
+    <caption class="visually-hidden">Audit events, newest first</caption>
+    <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">Action</th><th scope="col">Entity</th><th scope="col">IP</th><th scope="col">Details</th></tr></thead>
+    <tbody>{% for a, name, email in page.items %}
+    <tr class="{{ 'is-emergency' if a.action.startswith('emergency') }}">
+      <td data-label="When" class="small" style="white-space:nowrap"><time datetime="{{ a.timestamp|iso }}">{{ a.timestamp|dt("%d %b %Y, %I:%M:%S %p") }}</time></td>
+      <td data-label="Who">{% if name %}<strong>{{ name }}</strong><div class="small muted">{{ email }}</div>{% else %}<span class="muted">System / anonymous</span>{% endif %}</td>
+      <td data-label="Action"><code>{{ a.action }}</code></td>
+      <td data-label="Entity" class="small">{{ a.entity }}{% if a.entity_id %} #{{ a.entity_id }}{% endif %}</td>
+      <td data-label="IP" class="small tnum">{{ a.ip_address or "—" }}</td>
+      <td data-label="Details" class="small" style="max-width:280px;word-break:break-word">{% if a.details %}{% for k, v in a.details.items() %}<span class="faint">{{ k }}:</span> {{ v }}{{ "; " if not loop.last }}{% endfor %}{% else %}—{% endif %}</td>
+    </tr>{% endfor %}</tbody></table></div>
+  {{ pagination(page, "/admin/audit" ~ ("?" ~ qs if qs else "")) }}
+  {% else %}<div class="empty">{{ icon("clipboard") }}<h2>No events match</h2><p>Change the filters to see more.</p></div>{% endif %}
+</section>
+{% endblock %}

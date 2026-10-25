@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import icon, brand_mark %}
+{% block body_class %}portal-body{% endblock %}
+{% block stylesheets %}{{ css_tag('css/core.css') }}{{ css_tag('css/portal.css') }}{% endblock %}
+{% block body %}
+{% set cu = current_user %}
+{% macro nav_links() %}
+  {% for group, items in nav %}
+    {% if group %}<div class="side-group">{{ group }}</div>{% endif %}
+    {% for href, ico, label, count in items %}
+      <a class="side-link" href="{{ href }}" {% if path == href or (href|length > 8 and path.startswith(href + '/')) %}aria-current="page"{% endif %}>{{ icon(ico) }}<span>{{ label }}</span>{% if count %}<span class="count" aria-label="{{ count }} new">{{ count }}</span>{% endif %}</a>
+    {% endfor %}
+  {% endfor %}
+{% endmacro %}
+<div class="portal">
+  <aside class="sidebar" aria-label="Portal navigation">
+    <a class="brand" href="{{ cu.portal }}">{{ brand_mark() }}<span>CDHRS<small>{{ portal_label }}</small></span></a>
+    <nav aria-label="{{ portal_label }}">{{ nav_links() }}</nav>
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <span class="avatar" aria-hidden="true">{{ cu.user.full_name.replace("Dr. ", "")[:1] }}{{ (cu.user.full_name.split(" ")[-1])[:1] }}</span>
+        <span class="who"><strong>{{ cu.user.full_name }}</strong><span>{{ role_label }}</span></span>
+      </div>
+      <button type="button" class="side-link btn-ghost" style="width:100%;border:0;background:none" data-logout>{{ icon("logout") }}<span>Sign out</span></button>
+    </div>
+  </aside>
+
+  <div class="portal-main">
+    {% if system_banner %}<div class="banner-system" role="status">{{ system_banner }}</div>{% endif %}
+    <header class="topbar">
+      <button type="button" class="btn btn-ghost btn-icon portal-menu" data-drawer-open="portal-drawer" aria-controls="portal-drawer" aria-expanded="false" aria-label="Open navigation">{{ icon("menu") }}</button>
+      <div class="search" role="search" data-global-search>
+        <label class="visually-hidden" for="global-search">{{ search_label|default("Search") }}</label>
+        {{ icon("search") }}
+        <input class="input" id="global-search" type="search" autocomplete="off" placeholder="{{ search_placeholder|default('Search pages and help') }}" aria-controls="global-search-results" aria-expanded="false" aria-autocomplete="list" role="combobox" maxlength="80">
+        <div class="search-results" id="global-search-results" role="listbox" aria-label="Search results" hidden></div>
+      </div>
+      <span class="spacer"></span>
+      <a class="btn btn-ghost btn-icon" href="{{ cu.portal }}/notifications" aria-label="Notifications{% if unread_count %}, {{ unread_count }} unread{% endif %}" style="position:relative">{{ icon("bell") }}{% if unread_count %}<span class="count" style="position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:var(--danger)"></span>{% endif %}</a>
+      <button type="button" class="btn btn-ghost btn-icon theme-toggle" data-theme-toggle aria-label="Switch to dark theme">
+        <svg class="i-moon" width="20" height="20" aria-hidden="true"><use href="#i-moon"/></svg>
+        <svg class="i-sun" width="20" height="20" aria-hidden="true"><use href="#i-sun"/></svg>
+      </button>
+    </header>
+
+    <main id="main" tabindex="-1" class="page page-enter">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<div class="drawer" id="portal-drawer" hidden>
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <nav class="drawer-panel" role="dialog" aria-modal="true" aria-label="{{ portal_label }} navigation">
+    <div class="drawer-head"><a class="brand" href="{{ cu.portal }}">{{ brand_mark() }}<span>CDHRS</span></a><button type="button" class="btn btn-ghost btn-icon btn-sm" data-drawer-close aria-label="Close navigation">{{ icon("x") }}</button></div>
+    {{ nav_links() }}
+    <hr>
+    <button type="button" class="btn btn-block" data-logout>{{ icon("logout") }}Sign out</button>
+  </nav>
+</div>
+{% endblock %}

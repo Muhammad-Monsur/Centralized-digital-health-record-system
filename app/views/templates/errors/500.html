@@ -1,0 +1,16 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Something went wrong{% endblock %}
+{% block page_id %}error{% endblock %}
+{% block content %}
+<section class="container" style="padding:5rem 0 2rem;max-width:720px">
+  <div class="modal-icon is-danger" style="width:64px;height:64px">{{ icon("activity") }}</div>
+  <p class="badge badge-danger">Error {{ status|default(500) }}</p>
+  <h1 style="margin-top:1rem">{{ title|default("Something went wrong") }}</h1>
+  <p class="lead">{{ message|default("An unexpected error occurred. Your data is safe; try again in a moment.") }}</p>
+  <div class="form-actions">
+    <a class="btn btn-primary" href="{{ path }}">{{ icon("refresh") }}Try again</a>
+    <a class="btn btn-ghost" href="/">Home</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "layouts/public.html" %}
+{% block title %}Privacy notice{% endblock %}
+{% block page_id %}privacy{% endblock %}
+{% block content %}
+<article class="container" style="padding:3.5rem 0;max-width:760px">
+  <h1>Privacy notice</h1>
+  <p class="lead">This notice explains what CDHRS stores about you, who can see it, and the choices you have.</p>
+  <h2>What we store</h2>
+  <p>Your account details (name, email, mobile number, date of birth, gender, blood group, address), the medical records and documents you or your clinicians add, and a log of who accessed them.</p>
+  <h2>Who can see it</h2>
+  <p>You control each record. Public records are visible to verified clinicians who know your Unique Patient ID. Private records are visible only to doctors you approve, for the time you choose, or in a logged emergency that you are told about.</p>
+  <h2>Cookies</h2>
+  <p>We use two essential cookies: one keeps you signed in, the other protects forms against cross-site attacks. There are no analytics or advertising cookies. Your theme and cookie-notice choice are saved in your browser only.</p>
+  <h2>Security</h2>
+  <p>Passwords are hashed with Argon2. Sessions end after 15 minutes without activity. Consent is confirmed with a one-time SMS code. Pages with health information are marked so that browsers and proxies don't store them.</p>
+  <h2>Your rights</h2>
+  <p>You can see your access history, change visibility, revoke consent and update your details at any time. To close your account, use the contact button.</p>
+</article>
+{% endblock %}

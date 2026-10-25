@@ -1,0 +1,127 @@
+{# Hero visual: "how CDHRS works" as a cycle.
+   Six steps sit on a ring around a frosted-glass card. Every 3 seconds the next step's scene slides into
+   the card and plays a short micro-animation (upload bar, visibility toggle, request, SMS code, revoke, log).
+   A glowing dot travels round the ring and lights the segment it has passed.
+   - Steps are real buttons (jump to a step); a pause button stops the cycle (WCAG 2.2.2).
+   - Auto-play stops while off-screen, in a background tab, while hovered/focused, and never starts
+     with prefers-reduced-motion (the steps still work by click).
+   - Inactive scenes are aria-hidden + inert, so screen readers read only the visible one.
+   Motion is transform/opacity only. Driven by static/js/pages/landing.js. #}
+{% from "partials/macros.html" import icon %}
+{% set steps = [
+  ("upload",   "Save",     "Save your documents"),
+  ("lock",     "Choose",   "Make it public or private"),
+  ("stethoscope", "Request", "A doctor asks to see it"),
+  ("phone",    "Confirm",  "Confirm with an SMS code"),
+  ("key",      "Control",  "Accept or revoke any time"),
+  ("history",  "Review",   "Every access is on record"),
+] %}
+<figure class="cycle" data-cycle aria-labelledby="cycle-caption">
+  <figcaption id="cycle-caption" class="visually-hidden">How CDHRS works, in six steps that repeat</figcaption>
+  <div class="cy-glow cy-glow-1" aria-hidden="true"></div>
+  <div class="cy-glow cy-glow-2" aria-hidden="true"></div>
+  <div class="cy-glow cy-glow-3" aria-hidden="true"></div>
+
+  <svg class="cy-ring" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="cy-grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#38BDF8"/><stop offset=".5" stop-color="#0284C7"/><stop offset="1" stop-color="#6D5FE0"/>
+      </linearGradient>
+      <radialGradient id="cy-dot-glow"><stop offset="0" stop-color="#7DD3FC" stop-opacity=".9"/><stop offset="1" stop-color="#7DD3FC" stop-opacity="0"/></radialGradient>
+    </defs>
+    <circle class="cy-track" cx="50" cy="50" r="42"/>
+    <circle class="cy-track-dash" cx="50" cy="50" r="46.5"/>
+    {% for s in steps %}
+    <circle class="cy-seg" data-seg="{{ loop.index0 }}" cx="50" cy="50" r="42" pathLength="6" stroke-dasharray="0.96 5.04" stroke-dashoffset="{{ -loop.index0 - 0.02 }}" stroke="url(#cy-grad)"/>
+    {% endfor %}
+    <g class="cy-orbit"><circle cx="50" cy="8" r="5" fill="url(#cy-dot-glow)"/><circle cx="50" cy="8" r="1.6" class="cy-dot"/></g>
+  </svg>
+
+  <ol class="cy-nodes" aria-label="Steps">
+    {% for ico, short, long in steps %}
+    <li class="cy-node" style="--a: {{ loop.index0 * 60 }}deg">
+      <button type="button" class="cy-node-btn" data-step="{{ loop.index0 }}" aria-label="Step {{ loop.index }}: {{ long }}" {% if loop.first %}aria-current="step"{% endif %}>
+        <span class="cy-node-ring" aria-hidden="true"></span>{{ icon(ico) }}
+      </button>
+      <span class="cy-node-label" aria-hidden="true">{{ short }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+
+  <div class="cy-card">
+    <div class="cy-card-head">
+      <span class="cy-step-count" aria-hidden="true"><span data-cy-count>1</span> / 6</span>
+      <button type="button" class="cy-pause" data-cy-pause aria-label="Pause the animation" aria-pressed="false">
+        <svg class="i-pause" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <svg class="i-play" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
+      </button>
+    </div>
+    <div class="cy-progress" aria-hidden="true"><span data-cy-bar></span></div>
+
+    <div class="cy-scenes">
+      {# 1. Save #}
+      <div class="cy-scene is-active" data-scene="0" role="group" aria-label="Step 1: {{ steps[0][2] }}">
+        <p class="cy-title">{{ steps[0][2] }}</p>
+        <p class="cy-sub">Lab reports, prescriptions and scans in one place.</p>
+        <div class="cy-file">
+          <span class="cy-file-icon">{{ icon("file") }}</span>
+          <span class="cy-file-meta"><strong>Blood test report.pdf</strong><span>1.2 MB</span></span>
+          <span class="cy-file-done">{{ icon("check") }}</span>
+        </div>
+        <div class="cy-upbar"><span></span></div>
+        <p class="cy-note cy-note-ok">{{ icon("check-circle") }}Saved to your health history</p>
+      </div>
+
+      {# 2. Choose #}
+      <div class="cy-scene" data-scene="1" role="group" aria-label="Step 2: {{ steps[1][2] }}" aria-hidden="true" inert>
+        <p class="cy-title">{{ steps[1][2] }}</p>
+        <p class="cy-sub">Only you decide. Private needs your consent.</p>
+        <div class="cy-row"><span>Blood group <em>B+</em></span><span class="cy-pill is-public">Public</span></div>
+        <div class="cy-row cy-row-flip">
+          <span>Blood test report</span>
+          <span class="cy-toggle"><span class="cy-toggle-label is-a">Public</span><span class="cy-toggle-label is-b">{{ icon("lock") }}Private</span><span class="cy-knob"></span></span>
+        </div>
+      </div>
+
+      {# 3. Request #}
+      <div class="cy-scene" data-scene="2" role="group" aria-label="Step 3: {{ steps[2][2] }}" aria-hidden="true" inert>
+        <p class="cy-title">{{ steps[2][2] }}</p>
+        <div class="cy-doc">
+          <span class="cy-avatar" aria-hidden="true">TH</span>
+          <span><strong>Dr. Tanvir Hasan</strong><span>Lakeview General Hospital</span></span>
+        </div>
+        <p class="cy-quote">"Follow-up on your blood test before the next visit."</p>
+        <div class="cy-actions"><span class="cy-btn cy-btn-primary">Approve</span><span class="cy-btn">Decline</span></div>
+      </div>
+
+      {# 4. Confirm #}
+      <div class="cy-scene" data-scene="3" role="group" aria-label="Step 4: {{ steps[3][2] }}" aria-hidden="true" inert>
+        <p class="cy-title">{{ steps[3][2] }}</p>
+        <p class="cy-sub">Sent to your phone ending in 31.</p>
+        <div class="cy-otp" aria-hidden="true">{% for d in "482913" %}<span style="--d: {{ loop.index0 }}"><b>{{ d }}</b></span>{% endfor %}</div>
+        <p class="cy-note cy-note-ok cy-note-late">{{ icon("check-circle") }}Code verified</p>
+      </div>
+
+      {# 5. Control #}
+      <div class="cy-scene" data-scene="4" role="group" aria-label="Step 5: {{ steps[4][2] }}" aria-hidden="true" inert>
+        <p class="cy-title">{{ steps[4][2] }}</p>
+        <div class="cy-consent">
+          <span class="cy-avatar is-sm" aria-hidden="true">TH</span>
+          <span><strong>Dr. Tanvir Hasan</strong><span class="cy-state"><span class="cy-state-a">Access active · 24 h</span><span class="cy-state-b">Access revoked</span></span></span>
+        </div>
+        <p class="cy-sub">Access also ends when the doctor signs out.</p>
+        <div class="cy-actions"><span class="cy-btn cy-btn-danger">Revoke</span></div>
+      </div>
+
+      {# 6. Review #}
+      <div class="cy-scene" data-scene="5" role="group" aria-label="Step 6: {{ steps[5][2] }}" aria-hidden="true" inert>
+        <p class="cy-title">{{ steps[5][2] }}</p>
+        <ul class="cy-log">
+          <li style="--d: 0">{{ icon("eye") }}<span>Viewed blood test</span><time>10:42</time></li>
+          <li style="--d: 1">{{ icon("download") }}<span>Downloaded report</span><time>10:44</time></li>
+          <li style="--d: 2">{{ icon("key") }}<span>You revoked access</span><time>10:58</time></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</figure>

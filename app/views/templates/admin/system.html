@@ -1,0 +1,43 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}System & settings{% endblock %}
+{% block page_id %}admin-system{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>System & settings</h1><p>Health of the running instance and runtime configuration.</p></div><a class="btn" href="/admin/system">{{ icon("refresh") }}Refresh</a></div>
+<div class="stat-grid">
+  <div class="stat"><div class="stat-label">{{ icon("database") }}Database</div><div class="stat-value" style="font-size:1.5rem">{{ "OK" if h.db_ok else "Down" }}</div><div class="stat-foot">MySQL {{ h.db_version }} · {{ h.db_ms }} ms ping</div></div>
+  <div class="stat"><div class="stat-label">{{ icon("layers") }}Sessions & cache</div><div class="stat-value" style="font-size:1.5rem">{{ "Redis" if h.redis == "connected" else "Memory" }}</div><div class="stat-foot">{{ h.redis }}</div></div>
+  <div class="stat"><div class="stat-label">{{ icon("activity") }}Connection pool</div><div class="stat-value" style="font-size:1.5rem">{{ h.pool.checked_out if h.pool else "—" }}/{{ h.pool.size if h.pool else "—" }}</div><div class="stat-foot">in use / size · overflow {{ h.pool.overflow if h.pool else 0 }}</div></div>
+  <div class="stat"><div class="stat-label">{{ icon("archive") }}Storage</div><div class="stat-value" style="font-size:1.5rem">{{ h.disk_free_gb }} GB</div><div class="stat-foot">free of {{ h.disk_total_gb }} GB · uploads {{ h.uploads_mb }} MB · backups {{ h.backups_mb }} MB</div></div>
+</div>
+<div class="grid-main-side">
+  <section class="card">
+    <h2 style="font-size:var(--fs-lg)">Settings</h2>
+    {% if can_config %}
+    <form data-settings-form novalidate>
+      {% for key, (kind, rule) in rules.items() %}{% set row = settings_rows.get(key) %}{% if row %}
+      <div class="field">
+        {% if kind == "bool" %}
+        <label class="switch"><input type="checkbox" data-setting="{{ key }}" {% if row.setting_value == "true" %}checked{% endif %}><span class="track" aria-hidden="true"></span><span>{{ row.description }}</span></label>
+        {% else %}
+        <label for="s-{{ key }}">{{ row.description }}</label>
+        <input class="input" id="s-{{ key }}" data-setting="{{ key }}" value="{{ row.setting_value }}" {% if kind == "int" %}type="number" min="{{ rule[0] }}" max="{{ rule[1] }}" inputmode="numeric"{% else %}maxlength="{{ rule }}"{% endif %}>
+        {% endif %}
+        <p class="error" data-error-for="{{ key }}" role="alert"></p>
+      </div>
+      {% endif %}{% endfor %}
+      <button type="submit" class="btn btn-primary">Save settings</button>
+    </form>
+    {% else %}<p class="muted small">You can view system health but not change settings.</p>{% endif %}
+  </section>
+  <aside class="card">
+    <h2 style="font-size:var(--fs-md)">Instance</h2>
+    <dl class="dl small">
+      <dt>Environment</dt><dd>{{ h.env }}</dd><dt>Schema revision</dt><dd><code>{{ h.migration }}</code></dd><dt>SMS provider</dt><dd>{{ h.sms }}</dd>
+      {% for k, v in h.counts.items() %}<dt>{{ k|humanize }}</dt><dd class="tnum">{{ "{:,}".format(v) }}</dd>{% endfor %}
+    </dl>
+    <p class="small muted" style="margin-top:1rem">JSON health for monitoring tools: <code>GET /api/v1/admin/health</code>. Load-balancer probe: <code>GET /healthz</code>.</p>
+  </aside>
+</div>
+{% endblock %}
