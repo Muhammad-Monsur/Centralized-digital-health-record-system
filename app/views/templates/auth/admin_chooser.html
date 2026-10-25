@@ -1,0 +1,23 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Admin sign-in{% endblock %}
+{% block page_id %}login{% endblock %}
+{% block content %}
+<section class="container" style="padding:4rem 0;max-width:760px">
+  <h1>Administrator sign-in</h1>
+  <p class="lead">Choose the kind of administrator account you have.</p>
+  <div class="grid-2" style="margin-top:2rem">
+    <a class="card" href="/hospital-admin/login{% if next %}?next={{ next|urlencode }}{% endif %}" style="text-decoration:none;color:inherit">
+      <div class="modal-icon">{{ icon("hospital") }}</div>
+      <h2 style="font-size:var(--fs-lg)">Hospital administrator</h2>
+      <p class="muted small" style="margin:0">Manage one hospital: create doctor and staff accounts, oversee access and audit for your hospital.</p>
+    </a>
+    <a class="card" href="/system-admin/login{% if next %}?next={{ next|urlencode }}{% endif %}" style="text-decoration:none;color:inherit">
+      <div class="modal-icon">{{ icon("shield") }}</div>
+      <h2 style="font-size:var(--fs-lg)">System administrator</h2>
+      <p class="muted small" style="margin:0">Manage everything: hospitals, hospital admins, roles, audit logs, settings and backups.</p>
+    </a>
+  </div>
+  <p class="small muted" style="margin-top:2rem">Looking for something else? <a href="/login">Patient sign-in</a> · <a href="/doctor/login">Doctor sign-in</a></p>
+</section>
+{% endblock %}

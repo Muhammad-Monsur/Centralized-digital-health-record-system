@@ -1,0 +1,50 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, copy_button, visibility_badge %}
+{% block title %}{{ r.title }}{% endblock %}
+{% block page_id %}doctor-record{% endblock %}
+{% block page_module %}doctor-patient{% endblock %}
+{% block content %}
+<nav class="small no-print" aria-label="Breadcrumb" style="margin-bottom:1rem"><a href="/doctor/patients/{{ p.upi }}">{{ p.user.full_name }} ({{ p.upi }})</a> / <span aria-current="page">{{ r.title }}</span></nav>
+{% if ctx.level == "emergency" %}<div class="alert alert-emergency no-print">{{ icon("siren") }}<p>Viewing under emergency access. This view is logged.</p></div>{% endif %}
+<div class="print-only"><strong>CDHRS medical record</strong> · Patient {{ p.user.full_name }} · UPI {{ p.upi }}<hr></div>
+<div class="grid-main-side">
+  <article class="card">
+    <div class="card-header" style="align-items:flex-start">
+      <div>
+        <h1 style="font-size:var(--fs-xl);margin-bottom:.4rem">{{ r.title }}</h1>
+        <div class="inline-list">{{ visibility_badge(r.visibility.value) }}<span class="last-updated">{{ icon("clock") }}Last updated {{ r.updated_at|dt }}{% if r.updated_by %} by {{ r.updated_by.full_name }}{% endif %}</span></div>
+      </div>
+      <div class="form-actions no-print" style="margin:0">
+        <button type="button" class="btn btn-sm" data-print>{{ icon("printer") }}Print</button>
+        {% if editable %}<a class="btn btn-sm btn-primary" href="?edit=1">{{ icon("edit") }}Edit</a>{% endif %}
+      </div>
+    </div>
+    <dl class="record-meta">
+      <div><dt>Type</dt><dd>{{ r.information_type.value|humanize }}</dd></div>
+      <div><dt>Date</dt><dd>{{ r.information_date|d }}</dd></div>
+      <div><dt>Uploaded by</dt><dd>{{ author }}</dd></div>
+      <div><dt>Record ID</dt><dd><span class="tnum">REC-{{ "%06d"|format(r.information_id) }}</span> {{ copy_button("REC-%06d"|format(r.information_id), "Copy record ID") }}</dd></div>
+    </dl>
+    {% if r.details %}<h2 style="font-size:var(--fs-md)">Notes</h2><div class="record-body">{{ r.details }}</div>{% endif %}
+    {% if r.file_path %}
+    <h2 style="font-size:var(--fs-md);margin-top:1.5rem">Attachment</h2>
+    <div class="file-card"><span class="ri">{{ icon("file") }}</span>
+      <div style="min-width:0;flex:1"><strong>{{ r.file_original_name }}</strong><div class="small muted">Uploaded by {{ author }} · {{ r.created_at|d }} · {{ size }} · downloads are logged</div></div>
+      {% if r.file_mime and r.file_mime.startswith("image/") %}<a class="btn btn-sm no-print" href="/doctor/patients/{{ p.upi }}/records/{{ r.information_id }}/file?inline=1" target="_blank" rel="noopener">{{ icon("eye") }}View</a>{% endif %}
+      <a class="btn btn-sm no-print" href="/doctor/patients/{{ p.upi }}/records/{{ r.information_id }}/file" download>{{ icon("download") }}Download</a></div>
+    {% endif %}
+  </article>
+  <aside class="card">
+    <div class="card-header"><h2>Update history</h2><span class="badge">{{ history|length }}</span></div>
+    <ol class="timeline">
+      {% for h in history %}
+      <li class="{{ {'created':'is-created','visibility_changed':'is-visibility','archived':'is-archived'}.get(h.change_type, '') }}">
+        <strong>{{ labels[h.change_type] if h.change_type in labels else h.change_type|humanize }}</strong> <span class="small muted">by {{ h.by }}</span>
+        <div class="when">{{ h.changed_at|dt }}</div>
+        {% if h.change_type != "created" %}<ul class="diff" style="list-style:none;padding:0">{% for c in h.changes %}<li>{{ c.field }}: {% if c.old is not none %}<del>{{ c.old }}</del> → {% endif %}<ins>{{ c.new }}</ins></li>{% endfor %}</ul>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </aside>
+</div>
+{% endblock %}

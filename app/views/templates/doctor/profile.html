@@ -1,0 +1,41 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, password_field %}
+{% block title %}Profile & security{% endblock %}
+{% block page_id %}doctor-profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Profile & security</h1><p>Your name, designation and licence are managed by your hospital administrator.</p></div></div>
+<div class="grid-main-side">
+  <section class="card">
+    <h2 style="font-size:var(--fs-lg)">Professional details</h2>
+    <dl class="dl" style="margin-bottom:1.5rem">
+      <dt>Name</dt><dd>{{ u.full_name }}</dd>
+      <dt>Email (sign-in)</dt><dd>{{ u.email }}</dd>
+      {% if doc %}
+      <dt>Designation</dt><dd>{{ doc.designation }}</dd>
+      <dt>Licence number</dt><dd>{{ doc.license_number }}</dd>
+      <dt>Verification</dt><dd>{% if doc.verification_status.value == "verified" %}<span class="badge badge-success">{{ icon("check") }}Verified</span>{% elif doc.verification_status.value == "pending" %}<span class="badge badge-warning">Pending</span>{% else %}<span class="badge badge-danger">Rejected</span>{% endif %}</dd>
+      <dt>Hospital</dt><dd>{{ doc.hospital.name }}</dd>
+      {% else %}
+      <dt>Position</dt><dd>{{ staff.position }}</dd>
+      <dt>Hospital</dt><dd>{{ staff.hospital.name }}</dd>
+      {% endif %}
+    </dl>
+    <form data-api-form="/api/v1/doctor/profile" data-method="PUT" novalidate>
+      <div class="form-grid">
+        {% if doc %}<div class="field"><label for="specialization">Specialization</label><input class="input" id="specialization" name="specialization" value="{{ doc.specialization }}" minlength="2" maxlength="100"><p class="error" data-error-for="specialization" role="alert"></p></div>{% endif %}
+        <div class="field"><label for="phone">Mobile number</label><input class="input" id="phone" name="phone" type="tel" value="{{ u.phone or '' }}" maxlength="20" autocomplete="tel"><p class="hint">Optional. Used for security alerts.</p><p class="error" data-error-for="phone" role="alert"></p></div>
+      </div>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2 style="font-size:var(--fs-lg)">Change password</h2>
+    <p class="small muted">Your administrator set your first password. Change it to one only you know. This signs you out on other devices.</p>
+    <form data-api-form="/api/v1/auth/password" data-reset-on-success novalidate>
+      {{ password_field("current_password", "current_password", "Current password") }}
+      {{ password_field("new_password", "new_password", "New password", autocomplete="new-password", hint="10+ characters with upper and lower case, a number and a symbol.", meter=True) }}
+      <button type="submit" class="btn">{{ icon("lock") }}Change password</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

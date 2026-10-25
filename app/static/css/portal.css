@@ -1,0 +1,99 @@
+/* Portal-specific pieces: the UPI health card (signature element), record rows, dropzone. */
+
+.health-card {
+  position: relative; overflow: hidden; isolation: isolate;
+  border-radius: var(--r-xl); padding: var(--s-5) var(--s-6);
+  color: #fff; background: var(--grad-brand);
+  box-shadow: var(--shadow-3);
+  display: grid; gap: var(--s-4); align-content: space-between; min-height: 210px;
+}
+.health-card::before { /* slow gradient drift: transform only */
+  content: ""; position: absolute; inset: -40%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.22), transparent 70%) 20% 30% / 60% 60% no-repeat,
+              radial-gradient(closest-side, rgba(91, 79, 201, 0.55), transparent 70%) 80% 70% / 70% 70% no-repeat;
+  animation: gradient-pan 16s ease-in-out infinite;
+}
+.health-card .hc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-3); }
+.health-card .hc-name { font-family: var(--font-serif); font-size: var(--fs-lg); font-weight: 600; color: #fff; margin: 0; }
+.health-card .hc-sub { font-size: var(--fs-xs); color: rgba(255, 255, 255, 0.82); margin: 2px 0 0; }
+.health-card .hc-label { font-size: var(--fs-xs); color: rgba(255, 255, 255, 0.82); font-weight: 600; }
+.health-card .hc-upi { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.health-card .hc-upi .upi { font-size: clamp(1.25rem, 1rem + 1.4vw, 1.75rem); color: #fff; letter-spacing: 0.08em; }
+.health-card .copy-btn { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.35); color: #fff; }
+.health-card .copy-btn:hover { background: rgba(255, 255, 255, 0.26); color: #fff; }
+.health-card .hc-meta { display: flex; gap: var(--s-5); flex-wrap: wrap; font-size: var(--fs-sm); }
+.health-card .hc-meta span { color: rgba(255, 255, 255, 0.82); display: block; font-size: var(--fs-xs); }
+.health-card .hc-chip { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.16); font-size: var(--fs-xs); font-weight: 650; }
+.health-card .hc-chip svg { width: 14px; height: 14px; }
+
+.dash-hero { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); margin-bottom: var(--s-5); }
+.dash-hero .stat-grid { margin: 0; grid-template-columns: 1fr 1fr; }
+@media (max-width: 1080px) { .dash-hero { grid-template-columns: 1fr; } }
+
+/* Record list rows */
+.record-list { list-style: none; margin: 0; padding: 0; }
+.record-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s-4); align-items: center; padding: var(--s-3) var(--s-5); border-top: 1px solid var(--border-soft); }
+.record-row:first-child { border-top: 0; }
+.record-row:hover { background: var(--surface-2); }
+.record-row .ri { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); }
+.record-row .ri svg { width: 20px; height: 20px; }
+.record-row .rt { min-width: 0; }
+.record-row .rt a { font-weight: 650; color: var(--text); text-decoration: none; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.record-row .rt a::after { content: ""; position: absolute; inset: 0; } /* whole row clickable */
+.record-row { position: relative; }
+.record-row .rt a:hover { color: var(--primary); }
+.record-row .rm { font-size: var(--fs-xs); color: var(--text-faint); display: flex; gap: var(--s-3); flex-wrap: wrap; margin-top: 2px; }
+.record-row .rb { display: flex; gap: var(--s-2); align-items: center; position: relative; z-index: 1; }
+@media (max-width: 560px) {
+  .record-row { grid-template-columns: auto minmax(0, 1fr); gap: var(--s-1) var(--s-3); padding: var(--s-3) var(--s-4); align-items: start; }
+  .record-row .ri { width: 36px; height: 36px; }
+  .record-row .rt a { white-space: normal; }
+  .record-row .rm { gap: 2px var(--s-3); }
+  .record-row .rb { grid-column: 2; }
+}
+
+.filters { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: flex-end; padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--border-soft); }
+.filters .field { margin: 0; min-width: 160px; }
+.filters .field.grow { flex: 1; min-width: 220px; }
+.filters .input, .filters .select { min-height: 42px; }
+
+/* Dropzone */
+.dropzone { position: relative; display: grid; place-items: center; gap: var(--s-2); text-align: center; padding: var(--s-6) var(--s-4); border: 2px dashed var(--border); border-radius: var(--r-lg); background: var(--surface-2); color: var(--text-muted); transition: border-color var(--t-fast), background-color var(--t-fast); cursor: pointer; }
+.dropzone svg { width: 36px; height: 36px; color: var(--accent); }
+.dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.dropzone.is-over, .dropzone:focus-within { border-color: var(--accent); background: var(--primary-soft); }
+.dropzone .dz-file { font-weight: 650; color: var(--text); }
+
+/* Record detail */
+.record-meta { display: grid; gap: var(--s-3); grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin: var(--s-4) 0; }
+.record-meta div { padding: var(--s-3) var(--s-4); background: var(--surface-2); border-radius: var(--r-md); font-size: var(--fs-sm); }
+.record-meta dt { color: var(--text-muted); font-size: var(--fs-xs); font-weight: 600; }
+.record-meta dd { margin: 2px 0 0; font-weight: 600; }
+.record-body { white-space: pre-wrap; line-height: 1.7; max-width: 72ch; }
+.last-updated { display: inline-flex; gap: var(--s-2); align-items: center; font-size: var(--fs-xs); color: var(--text-muted); padding: 4px 10px; border-radius: var(--r-pill); background: var(--surface-sunk); }
+.last-updated svg { width: 14px; height: 14px; }
+.file-card { display: flex; gap: var(--s-3); align-items: center; padding: var(--s-3) var(--s-4); border: 1px solid var(--border-soft); border-radius: var(--r-md); }
+.file-card .ri { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--violet-soft); color: var(--violet); flex: none; }
+.file-card .ri svg { width: 20px; height: 20px; }
+
+/* Request cards (consent) */
+.request-card { border: 1px solid var(--border-soft); border-radius: var(--r-lg); padding: var(--s-4) var(--s-5); background: var(--surface); }
+.request-card + .request-card { margin-top: var(--s-3); }
+.request-card .purpose { margin: var(--s-3) 0; padding: var(--s-3) var(--s-4); border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 var(--r-sm) var(--r-sm) 0; font-size: var(--fs-sm); }
+.request-card .otp-step { margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px dashed var(--border); }
+
+/* Patient view header (doctor portal) */
+.patient-banner { display: flex; flex-wrap: wrap; gap: var(--s-5); align-items: center; justify-content: space-between; padding: var(--s-5); border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border-soft); margin-bottom: var(--s-5); }
+.access-pill { display: inline-flex; align-items: center; gap: var(--s-2); padding: 6px 12px; border-radius: var(--r-pill); font-weight: 700; font-size: var(--fs-sm); }
+.access-pill svg { width: 16px; height: 16px; }
+.access-pill.public { background: var(--success-soft); color: var(--success); }
+.access-pill.consent { background: var(--primary-soft); color: var(--primary); }
+.access-pill.emergency { background: var(--emergency-soft); color: var(--emergency); }
+.pulse-dot { position: relative; width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.pulse-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: currentColor; animation: pulse-ring 1.6s var(--ease-out) infinite; }
+
+.chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding-top: var(--s-2); }
+.chart-bars .bar { flex: 1; background: var(--grad-brand); border-radius: 6px 6px 2px 2px; transform-origin: bottom; animation: grow-bar var(--t-slow) var(--ease-out) both; min-height: 3px; }
+@keyframes grow-bar { from { transform: scaleY(0); } }
+.chart-labels { display: flex; gap: 6px; font-size: 11px; color: var(--text-faint); }
+.chart-labels span { flex: 1; text-align: center; }

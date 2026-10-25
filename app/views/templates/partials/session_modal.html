@@ -1,0 +1,13 @@
+{% from "partials/macros.html" import icon %}
+<div class="modal" id="session-modal" role="alertdialog" aria-modal="true" aria-labelledby="session-title" aria-describedby="session-body" hidden>
+  <div class="modal-backdrop"></div>
+  <div class="modal-dialog">
+    <div class="modal-icon">{{ icon("clock") }}</div>
+    <h2 id="session-title">You're about to be signed out</h2>
+    <p id="session-body" class="muted">For your privacy we sign you out after {{ settings.session_idle_timeout_minutes }} minutes without activity. Signing out in <strong class="countdown" data-session-countdown>60</strong> seconds.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" data-session-logout>Sign out now</button>
+      <button type="button" class="btn btn-primary" data-session-extend>Stay signed in</button>
+    </div>
+  </div>
+</div>

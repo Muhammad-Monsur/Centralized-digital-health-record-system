@@ -1,0 +1,28 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Find a patient{% endblock %}
+{% block page_id %}doctor-search{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Find a patient</h1><p>Ask the patient for their Unique Patient ID. Names and partial IDs aren't searchable, to protect privacy.</p></div></div>
+<section class="card" style="max-width:640px">
+  <div class="alert alert-danger" data-form-error role="alert" hidden>{{ icon("alert") }}<p></p></div>
+  <form data-api-form="/api/v1/doctor/patients/lookup" data-redirect novalidate>
+    <div class="field">
+      <label for="upi">Unique Patient ID<span class="req" aria-hidden="true">*</span></label>
+      <input class="input upi" id="upi" name="upi" required minlength="12" maxlength="24" placeholder="CDH-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" style="font-size:1.25rem" autofocus aria-describedby="upi-hint">
+      <p class="hint" id="upi-hint">Dashes and spaces are optional. The ID includes a check code, so typing mistakes are caught.</p>
+      <p class="error" data-error-for="upi" role="alert"></p>
+    </div>
+    <button type="submit" class="btn btn-primary btn-lg">{{ icon("search") }}Open patient</button>
+  </form>
+</section>
+<section class="card" style="max-width:640px;margin-top:1.5rem">
+  <h2 style="font-size:var(--fs-md)">What you'll see</h2>
+  <ul class="small muted" style="display:grid;gap:.4rem;padding-left:1.1rem">
+    <li><strong>Public records</strong> straight away.</li>
+    <li><strong>Private records</strong> only after the patient approves your request (confirmed by SMS code).</li>
+    {% if cu.can("clinical.access.emergency") %}<li><strong>Emergency access</strong> if the patient can't consent. It's logged, time-limited and the patient is told.</li>{% endif %}
+    <li>Every view is recorded in the patient's access history.</li>
+  </ul>
+</section>
+{% endblock %}

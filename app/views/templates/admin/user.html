@@ -1,0 +1,86 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, status_badge, password_field %}
+{% block title %}{{ u.full_name }}{% endblock %}
+{% block page_id %}admin-user{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+{% set link = u.doctor or u.staff or u.hospital_admin %}
+<nav class="small" aria-label="Breadcrumb" style="margin-bottom:1rem"><a href="/admin/users">Users</a> / <span aria-current="page">{{ u.full_name }}</span></nav>
+{% if request.query_params.get("created") %}<div class="alert alert-success" role="status">{{ icon("check-circle") }}<p><strong>Account created.</strong> {{ u.full_name }} can sign in at <strong>{{ "/doctor/login" if (u.doctor or u.staff) else "/hospital-admin/login" }}</strong> with {{ u.email }} and the password you set.</p></div>{% endif %}
+
+<div class="page-head">
+  <div>
+    <h1>{{ u.full_name }}</h1>
+    <p>{% if u.doctor %}{{ u.doctor.designation }} · {{ u.doctor.specialization }}{% elif u.staff %}{{ u.staff.position }}{% elif u.hospital_admin %}Hospital administrator{% elif u.patient %}Patient{% elif u.system_admin %}System administrator{% endif %}{% if link %} · {{ link.hospital.name }}{% endif %}</p>
+  </div>
+  <div class="inline-list">{{ status_badge(u.status.value) }}{% if u.doctor %}{{ status_badge(u.doctor.verification_status.value) }}{% endif %}{% if u.locked_until and u.locked_until > now %}<span class="badge badge-danger">{{ icon("lock") }}Locked until {{ u.locked_until|dt("%I:%M %p") }}</span>{% endif %}</div>
+</div>
+
+{% if not manageable %}<div class="alert alert-info">{{ icon("info") }}<p>You can view this account but not change it{% if u.user_id == cu.id %}. Use Profile & security for your own account{% endif %}.</p></div>{% endif %}
+
+<div class="grid-main-side">
+  <section class="card">
+    <h2 style="font-size:var(--fs-lg)">Account details</h2>
+    {% if manageable and not u.patient %}
+    <form data-api-form="/api/v1/admin/users/{{ u.user_id }}" data-method="PUT" novalidate>
+      <div class="form-grid">
+        <div class="field"><label for="e-name">Full name</label><input class="input" id="e-name" name="full_name" value="{{ u.full_name }}" required minlength="2" maxlength="120"><p class="error" data-error-for="full_name" role="alert"></p></div>
+        <div class="field"><label for="e-email">Email (sign-in)</label><input class="input" id="e-email" name="email" type="email" value="{{ u.email }}" required maxlength="255"><p class="error" data-error-for="email" role="alert"></p></div>
+        <div class="field"><label for="e-phone">Mobile</label><input class="input" id="e-phone" name="phone" type="tel" value="{{ u.phone or '' }}" maxlength="20"><p class="error" data-error-for="phone" role="alert"></p></div>
+        {% if u.doctor %}
+        <div class="field"><label for="e-des">Designation</label><input class="input" id="e-des" name="designation" value="{{ u.doctor.designation }}" maxlength="100"><p class="error" data-error-for="designation" role="alert"></p></div>
+        <div class="field"><label for="e-spec">Specialization</label><input class="input" id="e-spec" name="specialization" value="{{ u.doctor.specialization }}" maxlength="100"></div>
+        <div class="field"><label for="e-lic">Licence number</label><input class="input" id="e-lic" name="license_number" value="{{ u.doctor.license_number }}" maxlength="50"><p class="error" data-error-for="license_number" role="alert"></p></div>
+        {% elif u.staff %}
+        <div class="field"><label for="e-pos">Position</label><input class="input" id="e-pos" name="position" value="{{ u.staff.position }}" maxlength="100"></div>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
+    {% else %}
+    <dl class="dl">
+      <dt>Email</dt><dd>{{ u.email }}</dd><dt>Username</dt><dd>{{ u.username }}</dd><dt>Mobile</dt><dd>{{ u.phone or "—" }}</dd>
+      {% if u.patient %}<dt>Patient ID</dt><dd class="upi">{{ u.patient.upi }}</dd>{% endif %}
+      {% if u.doctor %}<dt>Licence</dt><dd>{{ u.doctor.license_number }}</dd>{% endif %}
+    </dl>
+    {% if u.patient %}<p class="small muted" style="margin-top:1rem">Administrators can't open patients' medical records.</p>{% endif %}
+    {% endif %}
+    <hr>
+    <dl class="dl small"><dt>Created</dt><dd>{{ u.created_at|dt }}</dd><dt>Last sign-in</dt><dd>{{ u.last_login_at|dt }}</dd><dt>Username</dt><dd>{{ u.username }}</dd></dl>
+  </section>
+
+  {% if manageable %}
+  <aside style="display:grid;gap:1.25rem;align-content:start">
+    {% if u.doctor and can_verify %}
+    <section class="card">
+      <h2 style="font-size:var(--fs-md)">Licence verification</h2>
+      <p class="small muted">Rejected or pending doctors keep their account but lose all clinical access.</p>
+      <div class="form-actions">
+        {% if u.doctor.verification_status.value != "verified" %}<button type="button" class="btn btn-sm btn-primary" data-verify="verified" data-user="{{ u.user_id }}">{{ icon("check") }}Verify</button>{% endif %}
+        {% if u.doctor.verification_status.value != "rejected" %}<button type="button" class="btn btn-sm btn-danger" data-verify="rejected" data-user="{{ u.user_id }}">Reject</button>{% endif %}
+      </div>
+    </section>
+    {% endif %}
+    <section class="card">
+      <h2 style="font-size:var(--fs-md)">Access</h2>
+      <div class="form-actions" style="flex-direction:column;align-items:stretch">
+        {% if u.status.value == "inactive" %}
+          <button type="button" class="btn btn-primary" data-user-status="active" data-user="{{ u.user_id }}" data-name="{{ u.full_name }}">{{ icon("unlock") }}Reactivate account</button>
+        {% else %}
+          <button type="button" class="btn btn-danger" data-user-status="inactive" data-user="{{ u.user_id }}" data-name="{{ u.full_name }}">{{ icon("lock") }}Deactivate account</button>
+        {% endif %}
+        {% if u.locked_until and u.locked_until > now %}<button type="button" class="btn" data-unlock="{{ u.user_id }}">Unlock sign-in</button>{% endif %}
+      </div>
+    </section>
+    <section class="card">
+      <h2 style="font-size:var(--fs-md)">Reset password</h2>
+      <p class="small muted">Signs the user out everywhere. Share the new password securely.</p>
+      <form data-api-form="/api/v1/admin/users/{{ u.user_id }}/password" data-reset-on-success novalidate data-confirm-reset="{{ u.full_name }}">
+        {{ password_field("r-pw", "password", "New password", autocomplete="new-password", meter=True) }}
+        <button type="submit" class="btn">{{ icon("key") }}Reset password</button>
+      </form>
+    </section>
+  </aside>
+  {% endif %}
+</div>
+{% endblock %}

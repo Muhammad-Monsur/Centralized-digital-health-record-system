@@ -1,0 +1,45 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, visibility_badge, pagination %}
+{% block title %}My records{% endblock %}
+{% block page_id %}patient-records{% endblock %}
+{% block page_module %}patient-records{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>My records</h1><p>Everything in your health history. Switch an item to private to hide it from doctors without your consent.</p></div>
+  <div class="form-actions" style="margin:0">
+    <button type="button" class="btn" data-print>{{ icon("printer") }}Print</button>
+    <a class="btn btn-primary" href="/patient/records/new">{{ icon("upload") }}Upload a document</a>
+  </div>
+</div>
+
+<section class="card card-flush">
+  {# Works without JS as a normal GET form; with JS it filters in place (debounced) with skeletons. #}
+  <form class="filters no-print" method="get" action="/patient/records" data-records-filter role="search" aria-label="Filter records">
+    <div class="field grow"><label for="f-q">Search</label><input class="input" id="f-q" name="q" type="search" value="{{ filters.q }}" maxlength="80" placeholder="Title or notes"></div>
+    <div class="field"><label for="f-type">Type</label>
+      <select class="select" id="f-type" name="type"><option value="">All types</option>{% for v, l in types %}<option value="{{ v }}" {% if filters.type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="f-vis">Visibility</label>
+      <select class="select" id="f-vis" name="visibility"><option value="">All</option><option value="public" {% if filters.visibility == "public" %}selected{% endif %}>Public</option><option value="private" {% if filters.visibility == "private" %}selected{% endif %}>Private</option></select></div>
+    <noscript><button class="btn" type="submit">Filter</button></noscript>
+  </form>
+
+  <div aria-live="polite" aria-busy="false" data-records-region>
+    {% if rows %}
+    <ul class="record-list" data-records-list>
+      {% for r in rows %}
+      <li class="record-row">
+        <span class="ri">{{ icon("file" if not r.has_file else "file-plus") }}</span>
+        <div class="rt"><a href="{{ r.url }}">{{ r.title }}</a>
+          <div class="rm"><span>{{ r.type_label }}</span><span>{{ r.date }}</span><span>Uploaded by {{ r.author }}</span>{% if r.has_file %}<span>Has attachment</span>{% endif %}</div></div>
+        <div class="rb">{{ visibility_badge(r.visibility) }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty" data-records-empty>{{ icon("search") }}<h2>{% if filters.q or filters.type or filters.visibility %}No records match these filters{% else %}No records yet{% endif %}</h2>
+      <p>{% if filters.q or filters.type or filters.visibility %}Try a different search or clear the filters.{% else %}Upload your first document to start your history.{% endif %}</p></div>
+    {% endif %}
+    <div data-records-pagination>{{ pagination(page, "/patient/records?q=" ~ (filters.q|urlencode) ~ "&type=" ~ filters.type ~ "&visibility=" ~ filters.visibility) }}</div>
+  </div>
+</section>
+{% endblock %}

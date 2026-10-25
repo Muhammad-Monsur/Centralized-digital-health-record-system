@@ -1,0 +1,112 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, copy_button, visibility_badge, pagination %}
+{% block title %}Patient {{ p.upi }}{% endblock %}
+{% block page_id %}doctor-patient{% endblock %}
+{% block page_module %}doctor-patient{% endblock %}
+{% block content %}
+{% if request.query_params.get("added") %}<div class="alert alert-success" role="status">{{ icon("check-circle") }}<p>Record added. The patient has been notified.</p></div>{% endif %}
+
+<section class="patient-banner" aria-label="Patient">
+  <div style="display:flex;gap:1rem;align-items:center">
+    <span class="avatar" style="width:56px;height:56px;font-size:1.1rem" aria-hidden="true">{{ p.user.full_name[:1] }}{{ p.user.full_name.split(" ")[-1][:1] }}</span>
+    <div>
+      <h1 style="font-size:var(--fs-xl);margin:0">{{ p.user.full_name }}</h1>
+      <div class="small muted"><span class="upi">{{ p.upi }}</span> {{ copy_button(p.upi, "Copy patient ID") }}
+        {% if show_demographics %} · {{ age }} years · {{ p.gender.value|humanize }} · Blood group {{ "unknown" if p.blood_group.value == "unknown" else p.blood_group.value }}{% else %} · Demographics are private{% endif %}</div>
+    </div>
+  </div>
+  <div>
+    {% if ctx.level == "emergency" %}
+      <span class="access-pill emergency"><span class="pulse-dot" aria-hidden="true"></span>Emergency access until {{ ctx.expires_at|dt("%I:%M %p") }}</span>
+    {% elif ctx.level == "consent" %}
+      <span class="access-pill consent">{{ icon("key") }}Consent until {{ ctx.expires_at|dt }} or until you sign out</span>
+    {% else %}
+      <span class="access-pill public">{{ icon("globe") }}Public records only</span>
+    {% endif %}
+  </div>
+</section>
+
+{% if ctx.level == "emergency" %}
+<div class="alert alert-emergency" role="status">{{ icon("siren") }}<p>You are viewing this patient under <strong>emergency access</strong>. Everything you open is logged and the patient has been notified. <button type="button" class="btn btn-sm btn-ghost" data-end-emergency="{{ ctx.emergency.emergency_access_id }}">End emergency access now</button></p></div>
+{% endif %}
+
+{% if not ctx.full %}
+<section class="card" style="margin-bottom:1.5rem" aria-labelledby="priv-h">
+  <div class="card-header" style="margin-bottom:.5rem"><h2 id="priv-h" style="font-size:var(--fs-md)">{{ icon("lock") }} {{ hidden_private }} private record{{ "s" if hidden_private != 1 }} hidden</h2></div>
+  {% if pending_request %}
+    <p class="small muted" style="margin:0">Your request from {{ pending_request.requested_at|dt }} is waiting for the patient's answer.</p>
+  {% elif cu.can("clinical.access.request") %}
+    <p class="small muted">Ask the patient for access. They'll see your reason and confirm with an SMS code.</p>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" data-open-modal="request-modal">{{ icon("key") }}Request access</button>
+      {% if cu.can("clinical.access.emergency") %}<button type="button" class="btn btn-emergency" data-open-modal="emergency-modal">{{ icon("siren") }}Emergency access</button>{% endif %}
+    </div>
+  {% else %}
+    <p class="small muted" style="margin:0">Your role can see public records only.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="card card-flush" aria-labelledby="recs-h">
+  <div class="card-header">
+    <h2 id="recs-h">{{ "All records" if ctx.full else "Public records" }}</h2>
+    <div class="form-actions" style="margin:0">
+      <form method="get" class="no-print" style="display:flex;gap:.5rem;align-items:center"><label for="t" class="visually-hidden">Type</label>
+        <select class="select" id="t" name="type" style="min-height:36px;width:auto" data-autosubmit><option value="">All types</option>{% for v, l in types %}<option value="{{ v }}" {% if type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></form>
+      {% if cu.can("clinical.records.create") %}<a class="btn btn-sm btn-primary" href="/doctor/patients/{{ p.upi }}/records/new">{{ icon("plus") }}Add record</a>{% endif %}
+    </div>
+  </div>
+  {% if rows %}
+  <ul class="record-list">
+    {% for r in rows %}
+    <li class="record-row">
+      <span class="ri">{{ icon("file-plus" if r.file_path else "file") }}</span>
+      <div class="rt"><a href="/doctor/patients/{{ p.upi }}/records/{{ r.information_id }}">{{ r.title }}</a>
+        <div class="rm"><span>{{ r.information_type.value|humanize }}</span><span>{{ r.information_date|d }}</span><span>Uploaded by {{ author(r) }}</span></div></div>
+      <div class="rb">{{ visibility_badge(r.visibility.value) }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {{ pagination(page, "/doctor/patients/" ~ p.upi ~ ("?type=" ~ type if type else "")) }}
+  {% else %}
+  <div class="empty">{{ icon("file") }}<h2>No {{ "" if ctx.full else "public " }}records</h2><p>{% if not ctx.full %}The patient hasn't made any records public.{% else %}This patient has no records yet.{% endif %}</p></div>
+  {% endif %}
+</section>
+
+{% if cu.can("clinical.access.request") and not ctx.full and not pending_request %}
+<div class="modal" id="request-modal" role="dialog" aria-modal="true" aria-labelledby="rq-title" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-dialog">
+    <button type="button" class="btn btn-ghost btn-icon btn-sm modal-close" data-close-modal aria-label="Close">{{ icon("x") }}</button>
+    <div class="modal-icon">{{ icon("key") }}</div>
+    <h2 id="rq-title">Request access to private records</h2>
+    <p class="small muted">The patient sees your name, hospital and reason. If they approve, access lasts for the time they choose, and only until you sign out. After signing in again you will need to ask again.</p>
+    <form data-api-form="/api/v1/doctor/patients/{{ p.upi }}/access-requests" data-reload data-close-on-success novalidate>
+      <div class="field"><label for="purpose">Reason<span class="req" aria-hidden="true">*</span></label>
+        <textarea class="textarea" id="purpose" name="purpose" required minlength="15" maxlength="1000" placeholder="e.g. Reviewing previous cardiology notes before tomorrow's ECG follow-up."></textarea>
+        <p class="error" data-error-for="purpose" role="alert"></p></div>
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancel</button><button type="submit" class="btn btn-primary">{{ icon("send") }}Send request</button></div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% if cu.can("clinical.access.emergency") and ctx.level != "emergency" %}
+<div class="modal" id="emergency-modal" role="alertdialog" aria-modal="true" aria-labelledby="em-title" aria-describedby="em-desc" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-dialog">
+    <button type="button" class="btn btn-ghost btn-icon btn-sm modal-close" data-close-modal aria-label="Close">{{ icon("x") }}</button>
+    <div class="modal-icon is-emergency">{{ icon("siren") }}</div>
+    <h2 id="em-title">Use emergency access?</h2>
+    <p id="em-desc" class="small muted">Only when the patient can't consent and care can't wait. You'll see all records for {{ emergency_minutes }} minutes, or until you sign out. The patient gets an SMS and notification, your hospital administrator is alerted, and your reason is kept in the audit log.</p>
+    <form data-api-form="/api/v1/doctor/patients/{{ p.upi }}/emergency" data-redirect novalidate>
+      <div class="field"><label for="reason">Describe the emergency<span class="req" aria-hidden="true">*</span></label>
+        <textarea class="textarea" id="reason" name="reason" required minlength="20" maxlength="2000" placeholder="e.g. Patient unconscious in A&E after road accident; need allergy and medication history."></textarea>
+        <p class="error" data-error-for="reason" role="alert"></p></div>
+      <div class="field"><label class="checkbox"><input type="checkbox" name="confirm" required> <span>I confirm this is a genuine emergency and I am responsible for this access.</span></label><p class="error" data-error-for="confirm" role="alert"></p></div>
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancel</button><button type="submit" class="btn btn-emergency">{{ icon("siren") }}Open records now</button></div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

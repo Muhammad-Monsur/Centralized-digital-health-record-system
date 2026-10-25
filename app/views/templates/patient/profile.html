@@ -1,0 +1,55 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, password_field, copy_button %}
+{% block title %}Profile & security{% endblock %}
+{% block page_id %}patient-profile{% endblock %}
+{% block page_module %}patient-profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Profile & security</h1><p>Your details and sign-in settings.</p></div></div>
+<div class="grid-main-side">
+  <section class="card" aria-labelledby="prof-h">
+    <h2 id="prof-h" style="font-size:var(--fs-lg)">Personal details</h2>
+    <p class="small muted">Patient ID <span class="upi">{{ p.upi }}</span> {{ copy_button(p.upi, "Copy patient ID") }} · Username <strong>{{ u.username }}</strong></p>
+    <div class="alert alert-danger" data-form-error role="alert" hidden>{{ icon("alert") }}<p></p></div>
+    <form data-api-form="/api/v1/patient/profile" data-method="PUT" novalidate>
+      <div class="form-grid">
+        <div class="field"><label for="full_name">Full name<span class="req" aria-hidden="true">*</span></label><input class="input" id="full_name" name="full_name" value="{{ u.full_name }}" required minlength="2" maxlength="120" autocomplete="name"><p class="error" data-error-for="full_name" role="alert"></p></div>
+        <div class="field"><label for="date_of_birth">Date of birth<span class="req" aria-hidden="true">*</span></label><input class="input" id="date_of_birth" name="date_of_birth" type="date" value="{{ p.date_of_birth.isoformat() }}" required min="1900-01-01" max="{{ today }}"><p class="error" data-error-for="date_of_birth" role="alert"></p></div>
+        <div class="field"><label for="email">Email<span class="req" aria-hidden="true">*</span></label><input class="input" id="email" name="email" type="email" value="{{ u.email }}" required maxlength="255" autocomplete="email"><p class="error" data-error-for="email" role="alert"></p></div>
+        <div class="field"><label for="phone">Mobile number<span class="req" aria-hidden="true">*</span></label><input class="input" id="phone" name="phone" type="tel" value="{{ u.phone }}" required maxlength="20" autocomplete="tel"><p class="hint">Consent codes are sent here.</p><p class="error" data-error-for="phone" role="alert"></p></div>
+        <div class="field"><label for="gender">Gender<span class="req" aria-hidden="true">*</span></label><select class="select" id="gender" name="gender" required>{% for g in genders %}<option value="{{ g.value }}" {% if p.gender == g %}selected{% endif %}>{{ "Prefer not to say" if g.value == "undisclosed" else g.value|capitalize }}</option>{% endfor %}</select><p class="error" data-error-for="gender" role="alert"></p></div>
+        <div class="field"><label for="blood_group">Blood group</label><select class="select" id="blood_group" name="blood_group">{% for b in blood_groups %}<option value="{{ b.value }}" {% if p.blood_group == b %}selected{% endif %}>{{ "I don't know" if b.value == "unknown" else b.value }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="field"><label for="address">Address</label><input class="input" id="address" name="address" value="{{ p.address or '' }}" maxlength="255" autocomplete="street-address" data-nullable><p class="error" data-error-for="address" role="alert"></p></div>
+      <fieldset class="field" style="border:0;padding:0">
+        <legend class="label">Profile visibility</legend>
+        <div class="segmented" role="radiogroup">
+          <label><input type="radio" name="profile_visibility" value="private" {% if p.profile_visibility.value == "private" %}checked{% endif %}><span>Private</span></label>
+          <label><input type="radio" name="profile_visibility" value="public" {% if p.profile_visibility.value == "public" %}checked{% endif %}><span>Public</span></label>
+        </div>
+        <p class="hint">Public lets verified clinicians see your age, gender and blood group when they look up your ID. Your name and ID are always shown to them.</p>
+      </fieldset>
+      <div class="field" data-reauth hidden>
+        <label for="pf-current">Current password<span class="req" aria-hidden="true">*</span></label>
+        <div class="input-group"><input class="input" id="pf-current" name="current_password" type="password" autocomplete="current-password" maxlength="128" aria-describedby="pf-current-hint">
+          <button type="button" class="pw-toggle" data-pw-toggle="pf-current" aria-label="Show password" aria-pressed="false"><svg width="20" height="20" aria-hidden="true"><use href="#i-eye"/></svg></button></div>
+        <p class="hint" id="pf-current-hint">Needed because you're changing your mobile number or email.</p>
+        <p class="error" data-error-for="current_password" role="alert"></p>
+      </div>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="pw-h">
+    <h2 id="pw-h" style="font-size:var(--fs-lg)">Change password</h2>
+    <p class="small muted">Changing your password signs you out on every other device.</p>
+    <form data-api-form="/api/v1/auth/password" data-reset-on-success novalidate>
+      {{ password_field("current_password", "current_password", "Current password") }}
+      {{ password_field("new_password", "new_password", "New password", autocomplete="new-password", hint="10+ characters with upper and lower case, a number and a symbol.", meter=True) }}
+      <button type="submit" class="btn">{{ icon("lock") }}Change password</button>
+    </form>
+    <hr>
+    <h3 style="font-size:var(--fs-md)">Last sign-in</h3>
+    <p class="small muted">{{ u.last_login_at|dt }}</p>
+  </section>
+</div>
+{% endblock %}

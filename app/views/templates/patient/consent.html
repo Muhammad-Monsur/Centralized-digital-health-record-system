@@ -1,0 +1,96 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, status_badge %}
+{% block title %}Access requests{% endblock %}
+{% block page_id %}patient-consent{% endblock %}
+{% block page_module %}patient-consent{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Access requests</h1><p>Doctors must ask before they can see your private records. Approving needs a code sent to {{ phone_masked }}.</p></div>
+</div>
+{% if request.query_params.get("granted") %}<div class="alert alert-success" role="status">{{ icon("check-circle") }}<p>Access granted. You can revoke it below at any time.</p></div>{% endif %}
+
+<ol class="steps" aria-label="How approval works">
+  <li class="is-current">Doctor asks, with a reason</li><li>You approve and pick how long</li><li>You enter the SMS code</li><li>Access ends automatically</li>
+</ol>
+
+<section aria-labelledby="pending-h" style="margin-bottom:2rem">
+  <h2 id="pending-h" style="font-size:var(--fs-lg)">Waiting for your answer <span class="badge {{ 'badge-warning' if ov.pending }}">{{ ov.pending|length }}</span></h2>
+  {% for req in ov.pending %}
+  {% set pc = ov.pending_consents.get(req.request_id) %}
+  <article class="request-card" data-request="{{ req.request_id }}" {% if pc %}data-consent="{{ pc.consent_id }}"{% endif %} aria-labelledby="req-{{ req.request_id }}">
+    <div class="card-header" style="margin:0">
+      <div>
+        <h3 id="req-{{ req.request_id }}" style="font-size:var(--fs-md);margin:0">{{ req.doctor.user.full_name }}</h3>
+        <div class="small muted">{{ req.doctor.specialization }} · {{ req.doctor.hospital.name }} · Licence {{ req.doctor.license_number }}</div>
+      </div>
+      <div class="small muted">Asked {{ req.requested_at|dt }} · Expires {{ req.expires_at|dt }}</div>
+    </div>
+    <p class="purpose"><strong>Reason given:</strong> {{ req.purpose }}</p>
+
+    <div data-answer-step {% if pc %}hidden{% endif %}>
+      <fieldset style="border:0;padding:0;margin:0 0 1rem">
+        <legend class="label" style="margin-bottom:.5rem">If you approve, access lasts</legend>
+        <div class="segmented" role="radiogroup">
+          {% for h in durations %}
+          <label><input type="radio" name="dur-{{ req.request_id }}" value="{{ h }}" {% if h == default_hours %}checked{% endif %}><span>{% if h < 24 %}{{ h }} hour{{ "s" if h > 1 }}{% elif h == 24 %}1 day{% elif h == 168 %}7 days{% else %}{{ h // 24 }} days{% endif %}</span></label>
+          {% endfor %}
+        </div>
+        <p class="hint small muted" style="margin-top:.5rem">Access also ends as soon as the doctor signs out. Next time they will need to ask you again.</p>
+      </fieldset>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" data-approve="{{ req.request_id }}">{{ icon("check") }}Approve and send code</button>
+        <button type="button" class="btn btn-ghost" data-reject="{{ req.request_id }}" data-doctor="{{ req.doctor.user.full_name }}">Decline</button>
+      </div>
+    </div>
+
+    <form class="otp-step" data-otp-step {% if not pc %}hidden{% endif %} novalidate>
+      <label class="label" for="otp-{{ req.request_id }}">Enter the 6-digit code we texted to {{ phone_masked }}</label>
+      <div class="form-actions" style="align-items:flex-start">
+        <input class="input otp-input" id="otp-{{ req.request_id }}" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" required>
+        <button type="submit" class="btn btn-primary">Confirm access</button>
+        <button type="button" class="btn btn-ghost" data-resend>Send a new code</button>
+        <button type="button" class="btn btn-ghost" data-reject="{{ req.request_id }}" data-doctor="{{ req.doctor.user.full_name }}">Decline instead</button>
+      </div>
+      <p class="error" data-error-for="code" role="alert"></p>
+      <p class="hint small muted" data-otp-hint>The code expires in 5 minutes and works once.</p>
+    </form>
+  </article>
+  {% else %}
+  <div class="card empty" style="padding:2rem">{{ icon("check-circle") }}<h2>No requests waiting</h2><p>When a doctor asks to see your private records, you'll see it here and get a notification.</p></div>
+  {% endfor %}
+</section>
+
+<section class="card card-flush" aria-labelledby="consents-h">
+  <div class="card-header"><h2 id="consents-h">Access you've granted</h2></div>
+  {% if ov.consents %}
+  <div class="table-wrap">
+  <table class="table stack">
+    <thead><tr><th scope="col">Doctor</th><th scope="col">Granted</th><th scope="col">Ends</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>
+    {% for c in ov.consents %}
+    {% set live = c.status.value == "active" and c.expires_at and c.expires_at > now %}
+    <tr>
+      <td data-label="Doctor"><strong>{{ c.doctor.user.full_name }}</strong><div class="small muted">{{ c.doctor.hospital.name }}</div></td>
+      <td data-label="Granted">{{ c.granted_at|dt }}</td>
+      <td data-label="Ends">{% if c.status.value == "ended" %}Doctor signed out {{ c.revoked_at|dt }}{% elif c.revoked_at %}Revoked {{ c.revoked_at|dt }}{% else %}{{ c.expires_at|dt }}{% endif %}</td>
+      <td data-label="Status">{{ status_badge("active" if live else ("expired" if c.status.value == "active" else c.status.value)) }}</td>
+      <td class="actions">{% if live %}<button type="button" class="btn btn-sm btn-danger" data-revoke="{{ c.consent_id }}" data-doctor="{{ c.doctor.user.full_name }}">Revoke</button>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">{{ icon("key") }}<h2>You haven't granted access yet</h2><p>Approved requests appear here so you can revoke them any time.</p></div>
+  {% endif %}
+</section>
+
+{% if ov.closed %}
+<details class="card" style="margin-top:1.5rem">
+  <summary><strong>Declined and expired requests ({{ ov.closed|length }})</strong></summary>
+  <ul class="small" style="margin-top:1rem">
+    {% for r in ov.closed %}<li>{{ r.doctor.user.full_name }}: {{ r.status.value|humanize }} · {{ r.requested_at|dt }}</li>{% endfor %}
+  </ul>
+</details>
+{% endif %}
+{% endblock %}

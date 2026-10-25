@@ -1,0 +1,41 @@
+/* Motion system: transform + opacity only. js/core/motion.js adds .is-visible via
+   IntersectionObserver; elements without JS stay visible (.no-js has no hiding). */
+
+.js [data-reveal] { opacity: 0; transform: translateY(14px); transition: opacity var(--t-slow) var(--ease-out), transform var(--t-slow) var(--ease-out); transition-delay: calc(var(--i, 0) * 70ms); }
+.js [data-reveal="left"] { transform: translateX(-18px); }
+.js [data-reveal="scale"] { transform: scale(0.96); }
+.js [data-reveal].is-visible { opacity: 1; transform: none; }
+
+/* Page enter transition (route fade/slide) and exit (set by js before navigation) */
+/* fill-mode "backwards" (not "both"): once finished, no transform stays on <main>; a lingering
+   transform would make <main> the containing block for position:fixed modals inside it. */
+.page-enter { animation: page-in 420ms var(--ease-out) backwards; }
+@keyframes page-in { from { opacity: 0; transform: translateY(8px); } }
+body.is-leaving main { opacity: 0; transform: translateY(-4px); transition: opacity 160ms var(--ease-in-out), transform 160ms var(--ease-in-out); }
+
+/* Staggered children (dashboard cards) */
+.stagger > * { animation: rise var(--t-slow) var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+
+/* Floating hero illustration */
+@keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes float-y-sm { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(1.8); opacity: 0; } }
+@keyframes gradient-pan { 0%, 100% { transform: translateX(-12%) rotate(0deg); } 50% { transform: translateX(12%) rotate(8deg); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+
+/* Reduced motion: no movement, no looping, near-instant fades. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .js [data-reveal] { opacity: 1; transform: none; }
+  .skeleton::after { display: none; }
+}
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

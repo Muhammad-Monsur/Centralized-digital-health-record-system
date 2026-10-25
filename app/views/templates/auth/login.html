@@ -1,0 +1,58 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon, password_field %}
+{% block title %}{{ cfg.title }}{% endblock %}
+{% block page_id %}login{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+{% if portal == "doctor" %}
+  {% set aside_title = "Your patients' history, with their permission." %}
+  {% set aside_text = "Look up a patient by their ID. Public records open straight away; private ones need the patient's approval." %}
+{% elif portal in ("hospital-admin", "system-admin") %}
+  {% set aside_title = "Administration, on the record." %}
+  {% set aside_text = "Every admin action is written to the audit log." %}
+{% endif %}
+<div class="auth-wrap">
+  {% include "partials/auth_aside.html" %}
+  <div class="auth-main">
+    <div class="auth-card">
+      {% if portal != "patient" %}<p class="badge badge-info" style="margin-bottom:.75rem">{{ icon({"doctor":"stethoscope","hospital-admin":"hospital","system-admin":"shield"}[portal]) }}{{ {"doctor":"Clinicians","hospital-admin":"Hospital administration","system-admin":"System administration"}[portal] }}</p>{% endif %}
+      <h1>{{ cfg.title }}</h1>
+      <p class="muted">{{ cfg.intro }}</p>
+
+      {% if reason == "timeout" %}
+        <div class="alert alert-info" role="status">{{ icon("clock") }}<p>You were signed out after a period of inactivity. Sign in again to continue.</p></div>
+      {% elif reason == "signed_out" %}
+        <div class="alert alert-success" role="status">{{ icon("check-circle") }}<p>You've signed out.</p></div>
+      {% elif reason == "registered" %}
+        <div class="alert alert-success" role="status">{{ icon("check-circle") }}<p>Account created. Sign in with your new password.</p></div>
+      {% endif %}
+      <div class="alert alert-danger" data-form-error role="alert" hidden>{{ icon("alert") }}<p></p></div>
+
+      <form data-api-form="/api/v1/auth/login" data-redirect novalidate>
+        <input type="hidden" name="portal" value="{{ portal }}">
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="field">
+          <label for="identifier">{{ "Email or username" if portal != "patient" else "Username or email" }}<span class="req" aria-hidden="true">*</span></label>
+          <input class="input" id="identifier" name="identifier" autocomplete="username" required minlength="3" maxlength="255" autofocus>
+          <p class="error" data-error-for="identifier" role="alert"></p>
+        </div>
+        {{ password_field("password", "password", "Password") }}
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Sign in</button>
+      </form>
+
+      <div class="small muted" style="margin-top:1.5rem">
+        {% if portal == "patient" %}
+          <p>New here? <a href="/register">Create a patient account</a>.</p>
+          <p>Not a patient? <a href="/doctor/login">Doctor sign-in</a> · <a href="/admin/login">Admin sign-in</a></p>
+        {% elif portal == "doctor" %}
+          <p>Doctors can't register themselves. If you need an account, ask your hospital administrator; they'll give you your sign-in details. You can change your password after signing in.</p>
+          <p><a href="/login">Patient sign-in</a></p>
+        {% else %}
+          <p>{% if portal == "hospital-admin" %}Hospital admin accounts are created by the system administrator.{% else %}System administrator accounts are provisioned during installation.{% endif %}</p>
+          <p><a href="/admin/login">Choose a different admin sign-in</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

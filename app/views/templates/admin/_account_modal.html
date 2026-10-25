@@ -1,0 +1,39 @@
+{# Create-account dialog. Doctors: name, email, designation, password (+ licence number).
+   Params: hospitals (list), is_sys, fixed_hospital (Hospital or None), default_kind #}
+{% from "partials/macros.html" import icon, password_field %}
+<div class="modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="acc-title" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-dialog" style="width:min(640px,100%)">
+    <button type="button" class="btn btn-ghost btn-icon btn-sm modal-close" data-close-modal aria-label="Close">{{ icon("x") }}</button>
+    <div class="modal-icon">{{ icon("user") }}</div>
+    <h2 id="acc-title">Create an account</h2>
+    <p class="small muted">The person signs in with this email and password, then can change the password from their profile.</p>
+    <form data-api-form="/api/v1/admin/users" data-redirect novalidate data-account-form>
+      <fieldset class="field" style="border:0;padding:0">
+        <legend class="label">Account type</legend>
+        <div class="segmented" role="radiogroup">
+          <label><input type="radio" name="kind" value="doctor" {% if default_kind != "staff" and default_kind != "hospital_admin" %}checked{% endif %}><span>Doctor</span></label>
+          <label><input type="radio" name="kind" value="staff" {% if default_kind == "staff" %}checked{% endif %}><span>Staff</span></label>
+          {% if is_sys %}<label><input type="radio" name="kind" value="hospital_admin" {% if default_kind == "hospital_admin" %}checked{% endif %}><span>Hospital admin</span></label>{% endif %}
+        </div>
+      </fieldset>
+      <div class="form-grid">
+        <div class="field"><label for="a-name">Full name<span class="req" aria-hidden="true">*</span></label><input class="input" id="a-name" name="full_name" required minlength="2" maxlength="120" autocomplete="off" autofocus><p class="error" data-error-for="full_name" role="alert"></p></div>
+        <div class="field"><label for="a-email">Email (used to sign in)<span class="req" aria-hidden="true">*</span></label><input class="input" id="a-email" name="email" type="email" required maxlength="255" autocomplete="off"><p class="error" data-error-for="email" role="alert"></p></div>
+        <div class="field" data-for-kind="doctor"><label for="a-designation">Designation<span class="req" aria-hidden="true">*</span></label><input class="input" id="a-designation" name="designation" maxlength="100" placeholder="e.g. Consultant, Medical Officer" list="designations"><datalist id="designations"><option>Consultant</option><option>Senior Consultant</option><option>Associate Professor</option><option>Assistant Professor</option><option>Medical Officer</option><option>Resident</option></datalist><p class="error" data-error-for="designation" role="alert"></p></div>
+        <div class="field" data-for-kind="doctor"><label for="a-licence">Licence number<span class="req" aria-hidden="true">*</span></label><input class="input" id="a-licence" name="license_number" maxlength="50" placeholder="BMDC-A-12345" autocapitalize="characters"><p class="error" data-error-for="license_number" role="alert"></p></div>
+        <div class="field" data-for-kind="doctor"><label for="a-spec">Specialization</label><input class="input" id="a-spec" name="specialization" maxlength="100" placeholder="e.g. Cardiology"><p class="error" data-error-for="specialization" role="alert"></p></div>
+        <div class="field" data-for-kind="staff" hidden><label for="a-position">Position<span class="req" aria-hidden="true">*</span></label><input class="input" id="a-position" name="position" maxlength="100" placeholder="e.g. Lab technologist, Nurse"><p class="error" data-error-for="position" role="alert"></p></div>
+        <div class="field"><label for="a-phone">Mobile (optional)</label><input class="input" id="a-phone" name="phone" type="tel" maxlength="20"><p class="error" data-error-for="phone" role="alert"></p></div>
+        {% if is_sys and not fixed_hospital %}
+        <div class="field"><label for="a-hospital">Hospital<span class="req" aria-hidden="true">*</span></label>
+          <select class="select" id="a-hospital" name="hospital_id" data-type="int" required><option value="">Choose…</option>{% for h in hospitals %}<option value="{{ h.hospital_id }}">{{ h.name }}</option>{% endfor %}</select><p class="error" data-error-for="hospital_id" role="alert"></p></div>
+        {% elif is_sys and fixed_hospital %}
+        <input type="hidden" name="hospital_id" value="{{ fixed_hospital.hospital_id }}" data-type="int">
+        {% endif %}
+      </div>
+      {{ password_field("a-password", "password", "Initial password", autocomplete="new-password", hint="10+ characters with upper and lower case, a number and a symbol. Share it securely.", meter=True) }}
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close-modal>Cancel</button><button type="submit" class="btn btn-primary">{{ icon("plus") }}Create account</button></div>
+    </form>
+  </div>
+</div>

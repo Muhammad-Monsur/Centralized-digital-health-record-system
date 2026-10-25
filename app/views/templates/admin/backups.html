@@ -1,0 +1,27 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Backups{% endblock %}
+{% block page_id %}admin-backups{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Backup & recovery</h1><p>Each backup holds every table and every uploaded document, with a checksum verified before any restore.</p></div>
+  <button type="button" class="btn btn-primary" data-create-backup>{{ icon("database") }}Create backup now</button>
+</div>
+<div class="alert alert-warning">{{ icon("alert") }}<p>Backups contain patient health data. They are stored on the server with owner-only permissions and are never downloadable from the browser. Copy them to encrypted off-site storage (see README).</p></div>
+<section class="card card-flush">
+  {% if backups %}
+  <div class="table-wrap"><table class="table stack">
+    <thead><tr><th scope="col">Backup</th><th scope="col">Created (UTC)</th><th scope="col">Rows</th><th scope="col">Files</th><th scope="col">Size</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for b in backups %}
+    <tr>
+      <td data-label="Backup"><code class="small">{{ b.name }}</code>{% if b.label == "pre-restore" %} <span class="badge badge-info">Safety copy</span>{% elif b.label == "corrupt" %} <span class="badge badge-danger">Unreadable</span>{% endif %}</td>
+      <td data-label="Created">{{ b.created_at[:19].replace("T", " ") }}</td>
+      <td data-label="Rows" class="tnum">{{ "{:,}".format(b.rows) }}</td>
+      <td data-label="Files" class="tnum">{{ b.files }}</td>
+      <td data-label="Size" class="tnum">{{ "%.1f"|format(b.size / 1024) }} KB</td>
+      <td class="actions">{% if b.label != "corrupt" %}<button type="button" class="btn btn-sm btn-danger" data-restore="{{ b.name }}" data-created="{{ b.created_at[:19].replace('T', ' ') }}">{{ icon("refresh") }}Restore</button>{% endif %}</td>
+    </tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty">{{ icon("database") }}<h2>No backups yet</h2><p>Create the first one now, and schedule <code>python -m scripts.backup create</code> daily (see README).</p></div>{% endif %}
+</section>
+{% endblock %}

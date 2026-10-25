@@ -1,0 +1,17 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Access denied{% endblock %}
+{% block page_id %}error{% endblock %}
+{% block content %}
+<section class="container" style="padding:5rem 0 2rem;max-width:720px">
+  <div class="modal-icon is-danger" style="width:64px;height:64px">{{ icon("lock") }}</div>
+  <p class="badge badge-danger">Error 403</p>
+  <h1 style="margin-top:1rem">{{ title|default("Access denied") }}</h1>
+  <p class="lead">{{ message|default("You don't have permission to view this page.") }}</p>
+  <p class="muted">Access to health information is limited to people the patient has allowed. If you think you should have access, ask your hospital administrator.</p>
+  <div class="form-actions">
+    {% if current_user %}<a class="btn btn-primary" href="{{ current_user.portal }}">{{ icon("grid") }}Back to your dashboard</a>{% else %}<a class="btn btn-primary" href="/login">Patient sign-in</a><a class="btn" href="/doctor/login">Doctor sign-in</a>{% endif %}
+    <a class="btn btn-ghost" href="/">Home</a>
+  </div>
+</section>
+{% endblock %}
