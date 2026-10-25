@@ -1,0 +1,17 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, password_field %}
+{% block title %}Profile & security{% endblock %}
+{% block page_id %}admin-profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Profile & security</h1><p>{{ role_label }}{% if cu.hospital_admin %} · {{ cu.hospital_admin.hospital.name }}{% endif %}</p></div></div>
+<div class="grid-2">
+  <section class="card"><h2 style="font-size:var(--fs-lg)">Account</h2>
+    <dl class="dl"><dt>Name</dt><dd>{{ u.full_name }}</dd><dt>Email (sign-in)</dt><dd>{{ u.email }}</dd><dt>Sign-in page</dt><dd><code>{{ cu.login_path }}</code></dd><dt>Last sign-in</dt><dd>{{ u.last_login_at|dt }}</dd></dl></section>
+  <section class="card"><h2 style="font-size:var(--fs-lg)">Change password</h2>
+    <form data-api-form="/api/v1/auth/password" data-reset-on-success novalidate>
+      {{ password_field("current_password", "current_password", "Current password") }}
+      {{ password_field("new_password", "new_password", "New password", autocomplete="new-password", hint="10+ characters with upper and lower case, a number and a symbol.", meter=True) }}
+      <button type="submit" class="btn">{{ icon("lock") }}Change password</button>
+    </form></section>
+</div>
+{% endblock %}

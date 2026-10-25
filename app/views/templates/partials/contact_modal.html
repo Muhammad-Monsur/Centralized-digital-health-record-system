@@ -1,0 +1,23 @@
+{% from "partials/macros.html" import icon %}
+<div class="modal" id="contact-modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-dialog">
+    <button type="button" class="btn btn-ghost btn-icon btn-sm modal-close" data-close-modal aria-label="Close">{{ icon("x") }}</button>
+    <div class="modal-icon">{{ icon("message") }}</div>
+    <h2 id="contact-title">Contact the CDHRS team</h2>
+    <p class="muted small">For questions about the service. Please don't include medical details here; use your portal for anything about your records.</p>
+    <form data-api-form="/api/v1/contact" data-reset-on-success data-close-on-success novalidate>
+      <div class="form-grid">
+        <div class="field"><label for="c-name">Your name<span class="req" aria-hidden="true">*</span></label><input class="input" id="c-name" name="name" required maxlength="120" autocomplete="name"><p class="error" data-error-for="name" role="alert"></p></div>
+        <div class="field"><label for="c-email">Email<span class="req" aria-hidden="true">*</span></label><input class="input" id="c-email" name="email" type="email" required maxlength="255" autocomplete="email"><p class="error" data-error-for="email" role="alert"></p></div>
+      </div>
+      <div class="field"><label for="c-subject">Subject<span class="req" aria-hidden="true">*</span></label><input class="input" id="c-subject" name="subject" required maxlength="150"><p class="error" data-error-for="subject" role="alert"></p></div>
+      <div class="field"><label for="c-message">Message<span class="req" aria-hidden="true">*</span></label><textarea class="textarea" id="c-message" name="message" required minlength="10" maxlength="3000"></textarea><p class="error" data-error-for="message" role="alert"></p></div>
+      <div class="visually-hidden" aria-hidden="true"><label for="c-website">Leave this empty</label><input id="c-website" name="website" tabindex="-1" autocomplete="off"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">{{ icon("send") }}Send message</button>
+      </div>
+    </form>
+  </div>
+</div>

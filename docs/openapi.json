@@ -1,0 +1,3117 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CDHRS API",
+    "description": "Centralized Digital Health Record System. All state-changing endpoints require a session cookie and an `X-CSRF-Token` header (see README).",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign in through a role's portal",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign out",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change your password (signs out other devices)",
+        "operationId": "change_password_api_v1_auth_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/session/status": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Session time left + CSRF token (does not extend)",
+        "description": "Polled by the timeout warning. Does NOT extend the session.",
+        "operationId": "session_status_api_v1_session_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStatusOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/session/extend": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Extend the session (stay signed in)",
+        "operationId": "session_extend_api_v1_session_extend_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStatusOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "tags": [
+          "common"
+        ],
+        "summary": "Role-aware site search",
+        "operationId": "search_api_v1_search_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 80,
+              "default": "",
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/faq": {
+      "get": {
+        "tags": [
+          "common"
+        ],
+        "summary": "FAQ (public, ETag-cached)",
+        "description": "Public, non-sensitive, identical for everyone -> cacheable with an ETag.",
+        "operationId": "faq_api_v1_faq_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/newsletter": {
+      "post": {
+        "tags": [
+          "common"
+        ],
+        "summary": "Subscribe to the newsletter",
+        "operationId": "newsletter_api_v1_newsletter_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewsletterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contact": {
+      "post": {
+        "tags": [
+          "common"
+        ],
+        "summary": "Send a contact message",
+        "operationId": "contact_api_v1_contact_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patients/register": {
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Register a patient account (issues a UPI)",
+        "operationId": "register_api_v1_patients_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRegisterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/records": {
+      "get": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "List own records (filter, search, paginate)",
+        "operationId": "api_records_api_v1_patient_records_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 10,
+              "title": "Per Page"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "visibility",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Visibility"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Upload a document / add a record",
+        "operationId": "api_upload_api_v1_patient_records_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_api_upload_api_v1_patient_records_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/records/{information_id}/visibility": {
+      "patch": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Set a record public or private",
+        "operationId": "api_visibility_api_v1_patient_records__information_id__visibility_patch",
+        "parameters": [
+          {
+            "name": "information_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Information Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisibilityIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/records/{information_id}": {
+      "delete": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Delete a document you uploaded",
+        "operationId": "api_delete_api_v1_patient_records__information_id__delete",
+        "parameters": [
+          {
+            "name": "information_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Information Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/profile": {
+      "put": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Update profile (password needed to change phone/email)",
+        "operationId": "api_profile_api_v1_patient_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/consent/requests/{request_id}/approve": {
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Approve an access request (sends SMS code)",
+        "operationId": "api_approve_api_v1_patient_consent_requests__request_id__approve_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/consent/{consent_id}/verify": {
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Confirm approval with the SMS code",
+        "operationId": "api_verify_api_v1_patient_consent__consent_id__verify_post",
+        "parameters": [
+          {
+            "name": "consent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Consent Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/consent/{consent_id}/resend": {
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Send a new SMS code",
+        "operationId": "api_resend_api_v1_patient_consent__consent_id__resend_post",
+        "parameters": [
+          {
+            "name": "consent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Consent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/consent/requests/{request_id}/reject": {
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Decline an access request",
+        "operationId": "api_reject_api_v1_patient_consent_requests__request_id__reject_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/patient/consent/{consent_id}/revoke": {
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Revoke consent immediately",
+        "operationId": "api_revoke_api_v1_patient_consent__consent_id__revoke_post",
+        "parameters": [
+          {
+            "name": "consent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Consent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/read": {
+      "post": {
+        "tags": [
+          "patient"
+        ],
+        "summary": "Mark all notifications read",
+        "operationId": "api_notifications_read_api_v1_notifications_read_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/patients/lookup": {
+      "post": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "Find a patient by exact UPI",
+        "operationId": "lookup_api_v1_doctor_patients_lookup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpiLookupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/patients/{upi}/access-requests": {
+      "post": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "Request consent for private records",
+        "operationId": "request_access_api_v1_doctor_patients__upi__access_requests_post",
+        "parameters": [
+          {
+            "name": "upi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upi"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessRequestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/access-requests/{request_id}/cancel": {
+      "post": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "Cancel a pending request",
+        "operationId": "cancel_request_api_v1_doctor_access_requests__request_id__cancel_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/patients/{upi}/emergency": {
+      "post": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "Start emergency access (logged, patient notified)",
+        "operationId": "emergency_api_v1_doctor_patients__upi__emergency_post",
+        "parameters": [
+          {
+            "name": "upi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upi"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/emergency/{emergency_access_id}/end": {
+      "post": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "End emergency access early",
+        "operationId": "end_emergency_api_v1_doctor_emergency__emergency_access_id__end_post",
+        "parameters": [
+          {
+            "name": "emergency_access_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Emergency Access Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/patients/{upi}/records": {
+      "post": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "Add a record for a patient (always private)",
+        "operationId": "create_record_api_v1_doctor_patients__upi__records_post",
+        "parameters": [
+          {
+            "name": "upi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upi"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_record_api_v1_doctor_patients__upi__records_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/patients/{upi}/records/{information_id}": {
+      "patch": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "Edit a record (own hospital, needs access)",
+        "operationId": "update_record_api_v1_doctor_patients__upi__records__information_id__patch",
+        "parameters": [
+          {
+            "name": "upi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Upi"
+            }
+          },
+          {
+            "name": "information_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Information Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordUpdateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/doctor/profile": {
+      "put": {
+        "tags": [
+          "doctor"
+        ],
+        "summary": "Update own phone / specialization",
+        "operationId": "update_profile_api_v1_doctor_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderProfileIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create a doctor, staff or hospital-admin account",
+        "operationId": "create_user_api_v1_admin_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}": {
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Edit an account",
+        "operationId": "update_user_api_v1_admin_users__user_id__put",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}/status": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Activate or deactivate an account",
+        "operationId": "user_status_api_v1_admin_users__user_id__status_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}/unlock": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Unlock sign-in after lockout",
+        "operationId": "user_unlock_api_v1_admin_users__user_id__unlock_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}/password": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reset a password (user must change it)",
+        "operationId": "user_password_api_v1_admin_users__user_id__password_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}/verify": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Verify or reject a doctor's licence",
+        "operationId": "user_verify_api_v1_admin_users__user_id__verify_post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/hospitals": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Add a hospital (system admin)",
+        "operationId": "create_hospital_api_v1_admin_hospitals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospitalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/hospitals/{hospital_id}": {
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Edit hospital details",
+        "operationId": "update_hospital_api_v1_admin_hospitals__hospital_id__put",
+        "parameters": [
+          {
+            "name": "hospital_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Hospital Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospitalUpdateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/hospitals/{hospital_id}/status": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Activate or deactivate a hospital",
+        "operationId": "hospital_status_api_v1_admin_hospitals__hospital_id__status_post",
+        "parameters": [
+          {
+            "name": "hospital_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Hospital Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HospitalStatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/roles": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create a role",
+        "operationId": "create_role_api_v1_admin_roles_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/roles/{role_id}/permissions": {
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Replace a role's permissions",
+        "operationId": "role_permissions_api_v1_admin_roles__role_id__permissions_put",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RolePermissionsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/roles/{role_id}/status": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Activate or deactivate a custom role",
+        "operationId": "role_status_api_v1_admin_roles__role_id__status_post",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleStatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/roles/{role_id}/reset": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Restore a built-in role's defaults",
+        "operationId": "role_reset_api_v1_admin_roles__role_id__reset_post",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Role Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/emergency/{emergency_access_id}/end": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "End someone's emergency access",
+        "operationId": "end_emergency_api_v1_admin_emergency__emergency_access_id__end_post",
+        "parameters": [
+          {
+            "name": "emergency_access_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Emergency Access Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/settings": {
+      "put": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Change system settings",
+        "operationId": "update_settings_api_v1_admin_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/health": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "System health (JSON)",
+        "operationId": "health_api_v1_admin_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/backups": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create a backup",
+        "operationId": "create_backup_api_v1_admin_backups_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/backups/{name}/restore": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Restore a backup (type RESTORE)",
+        "operationId": "restore_backup_api_v1_admin_backups__name__restore_post",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Liveness + database check (load balancer probe)",
+        "description": "Liveness + database connectivity probe (used by nginx / docker).",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Healthz Healthz Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccessRequestIn": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 15,
+            "title": "Purpose",
+            "description": "Why the doctor needs private records"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "purpose"
+        ],
+        "title": "AccessRequestIn"
+      },
+      "AccountCreateIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "doctor",
+              "staff",
+              "hospital_admin"
+            ],
+            "title": "Kind"
+          },
+          "full_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 10,
+            "title": "Password"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "hospital_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hospital Id",
+            "description": "System admin only; hospital admins always create for their own hospital"
+          },
+          "designation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Designation"
+          },
+          "license_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License Number"
+          },
+          "specialization": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialization"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "full_name",
+          "email",
+          "password"
+        ],
+        "title": "AccountCreateIn",
+        "description": "Create a doctor, staff member or hospital admin.\n\nDoctors: name, email, designation, password (+ licence number for professional verification)."
+      },
+      "AccountUpdateIn": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "designation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Designation"
+          },
+          "specialization": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialization"
+          },
+          "license_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License Number"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "full_name",
+          "email"
+        ],
+        "title": "AccountUpdateIn"
+      },
+      "ApproveIn": {
+        "properties": {
+          "duration_hours": {
+            "type": "integer",
+            "enum": [
+              1,
+              6,
+              24,
+              72,
+              168
+            ],
+            "title": "Duration Hours",
+            "default": 24
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ApproveIn"
+      },
+      "BloodGroup": {
+        "type": "string",
+        "enum": [
+          "A+",
+          "A-",
+          "B+",
+          "B-",
+          "AB+",
+          "AB-",
+          "O+",
+          "O-",
+          "unknown"
+        ],
+        "title": "BloodGroup"
+      },
+      "Body_api_upload_api_v1_patient_records_post": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "details": {
+            "type": "string",
+            "title": "Details",
+            "default": ""
+          },
+          "information_type": {
+            "type": "string",
+            "title": "Information Type",
+            "default": ""
+          },
+          "information_date": {
+            "type": "string",
+            "title": "Information Date",
+            "default": ""
+          },
+          "visibility": {
+            "type": "string",
+            "title": "Visibility",
+            "default": "private"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "title": "Body_api_upload_api_v1_patient_records_post"
+      },
+      "Body_create_record_api_v1_doctor_patients__upi__records_post": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "default": ""
+          },
+          "details": {
+            "type": "string",
+            "title": "Details",
+            "default": ""
+          },
+          "information_type": {
+            "type": "string",
+            "title": "Information Type",
+            "default": ""
+          },
+          "information_date": {
+            "type": "string",
+            "title": "Information Date",
+            "default": ""
+          },
+          "visibility": {
+            "type": "string",
+            "title": "Visibility",
+            "default": "private"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "title": "Body_create_record_api_v1_doctor_patients__upi__records_post"
+      },
+      "ContactIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Subject"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 3000,
+            "minLength": 10,
+            "title": "Message"
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Website",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "subject",
+          "message"
+        ],
+        "title": "ContactIn"
+      },
+      "EmergencyIn": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 20,
+            "title": "Reason"
+          },
+          "confirm": {
+            "type": "boolean",
+            "title": "Confirm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason",
+          "confirm"
+        ],
+        "title": "EmergencyIn"
+      },
+      "Gender": {
+        "type": "string",
+        "enum": [
+          "male",
+          "female",
+          "other",
+          "undisclosed"
+        ],
+        "title": "Gender"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HospitalIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Name"
+          },
+          "registration_number": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9\\-/]+$",
+            "title": "Registration Number"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 5,
+            "title": "Address"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Phone"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "registration_number",
+          "address",
+          "phone"
+        ],
+        "title": "HospitalIn"
+      },
+      "HospitalStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "inactive"
+        ],
+        "title": "HospitalStatus"
+      },
+      "HospitalStatusIn": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HospitalStatus"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HospitalStatusIn"
+      },
+      "HospitalUpdateIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 3,
+            "title": "Name"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 5,
+            "title": "Address"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Phone"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "address",
+          "phone"
+        ],
+        "title": "HospitalUpdateIn"
+      },
+      "InformationType": {
+        "type": "string",
+        "enum": [
+          "diagnosis",
+          "prescription",
+          "lab_report",
+          "imaging",
+          "vaccination",
+          "allergy",
+          "surgery",
+          "clinical_note",
+          "other"
+        ],
+        "title": "InformationType"
+      },
+      "LoginIn": {
+        "properties": {
+          "portal": {
+            "type": "string",
+            "enum": [
+              "patient",
+              "doctor",
+              "hospital-admin",
+              "system-admin"
+            ],
+            "title": "Portal",
+            "default": "patient"
+          },
+          "identifier": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Identifier",
+            "description": "Username or email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "title": "LoginIn"
+      },
+      "LoginOut": {
+        "properties": {
+          "redirect": {
+            "type": "string",
+            "title": "Redirect"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "redirect"
+        ],
+        "title": "LoginOut"
+      },
+      "NewsletterIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "NewsletterIn"
+      },
+      "OtpIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 4,
+            "pattern": "^\\d+$",
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "OtpIn"
+      },
+      "PasswordChangeIn": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Current Password"
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 10,
+            "title": "New Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChangeIn"
+      },
+      "PatientRegisterIn": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Full Name"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Phone"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 10,
+            "title": "Password"
+          },
+          "confirm_password": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Confirm Password"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Of Birth"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "blood_group": {
+            "$ref": "#/components/schemas/BloodGroup",
+            "default": "unknown"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "accept_terms": {
+            "type": "boolean",
+            "title": "Accept Terms"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "full_name",
+          "username",
+          "email",
+          "phone",
+          "password",
+          "confirm_password",
+          "date_of_birth",
+          "gender",
+          "accept_terms"
+        ],
+        "title": "PatientRegisterIn"
+      },
+      "ProfileUpdateIn": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "format": "email",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Phone"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Of Birth"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "blood_group": {
+            "$ref": "#/components/schemas/BloodGroup"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "profile_visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          },
+          "current_password": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "full_name",
+          "email",
+          "phone",
+          "date_of_birth",
+          "gender",
+          "blood_group",
+          "profile_visibility"
+        ],
+        "title": "ProfileUpdateIn"
+      },
+      "ProviderProfileIn": {
+        "properties": {
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "specialization": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Specialization"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ProviderProfileIn"
+      },
+      "RecordUpdateIn": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Title"
+          },
+          "details": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Details",
+            "default": ""
+          },
+          "information_type": {
+            "$ref": "#/components/schemas/InformationType"
+          },
+          "information_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Information Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "information_type",
+          "information_date"
+        ],
+        "title": "RecordUpdateIn"
+      },
+      "ResetPasswordIn": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 10,
+            "title": "Password"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "ResetPasswordIn"
+      },
+      "RestoreIn": {
+        "properties": {
+          "confirm": {
+            "type": "string",
+            "title": "Confirm",
+            "description": "Type \"RESTORE\" to confirm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "confirm"
+        ],
+        "title": "RestoreIn"
+      },
+      "RoleIn": {
+        "properties": {
+          "role_name": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "pattern": "^[a-z][a-z0-9_]+$",
+            "title": "Role Name"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Description",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role_name"
+        ],
+        "title": "RoleIn"
+      },
+      "RolePermissionsIn": {
+        "properties": {
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Permissions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "permissions"
+        ],
+        "title": "RolePermissionsIn"
+      },
+      "RoleStatusIn": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "RoleStatusIn"
+      },
+      "SessionStatusOut": {
+        "properties": {
+          "authenticated": {
+            "type": "boolean",
+            "title": "Authenticated"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
+          "warning_seconds": {
+            "type": "integer",
+            "title": "Warning Seconds"
+          },
+          "csrf_token": {
+            "type": "string",
+            "title": "Csrf Token",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "authenticated",
+          "expires_in",
+          "warning_seconds"
+        ],
+        "title": "SessionStatusOut"
+      },
+      "SettingsIn": {
+        "properties": {
+          "values": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "maxProperties": 50,
+            "title": "Values"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "title": "SettingsIn"
+      },
+      "StatusIn": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ],
+            "title": "Status"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "StatusIn"
+      },
+      "UpiLookupIn": {
+        "properties": {
+          "upi": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 12,
+            "title": "Upi"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "upi"
+        ],
+        "title": "UpiLookupIn"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerificationStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "verified",
+          "rejected"
+        ],
+        "title": "VerificationStatus"
+      },
+      "VerifyIn": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/VerificationStatus"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "VerifyIn"
+      },
+      "Visibility": {
+        "type": "string",
+        "enum": [
+          "public",
+          "private"
+        ],
+        "title": "Visibility"
+      },
+      "VisibilityIn": {
+        "properties": {
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "visibility"
+        ],
+        "title": "VisibilityIn"
+      }
+    }
+  }
+}

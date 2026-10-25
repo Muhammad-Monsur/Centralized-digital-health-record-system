@@ -1,0 +1,162 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Access your medical reports anytime, from anywhere{% endblock %}
+{% block page_id %}landing{% endblock %}
+{% block page_module %}landing{% endblock %}
+{% block head %}{{ css_tag('css/landing.css', csp_nonce, inline=True) }}{% endblock %}
+{% block content %}
+
+{# 1. Hero #}
+<section class="hero" aria-labelledby="hero-h">
+  <div class="hero-bg" aria-hidden="true"><span class="hero-orb o1"></span><span class="hero-orb o2"></span></div>
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="hero-kicker">{{ icon("shield") }}Your records, your consent</p>
+      <h1 id="hero-h">Access Your Medical Reports Anytime From Anywhere</h1>
+      <p class="lead">Prescriptions, lab results and scans from every hospital, in one place you control. Doctors see private records only after you approve with a code sent to your phone.</p>
+      <div class="form-actions hero-cta">
+        {% if current_user %}<a class="btn btn-primary btn-lg" href="{{ current_user.portal }}">{{ icon("grid") }}Open your dashboard</a>
+        {% else %}<a class="btn btn-primary btn-lg" href="/register">Create your free account</a><a class="btn btn-lg" href="/login">Sign in</a>{% endif %}
+      </div>
+      <ul class="hero-proof" aria-label="Safeguards">
+        <li>{{ icon("lock") }}Private by default</li><li>{{ icon("key") }}Consent with SMS code</li><li>{{ icon("history") }}Every access on record</li>
+      </ul>
+    </div>
+    <div class="hero-visual">{% include "partials/hero_cycle.html" %}</div>
+  </div>
+</section>
+
+{# 2. How it will make your life easier #}
+<section class="section section-glass" id="benefits" aria-labelledby="benefits-h">
+  <div class="section-glows" aria-hidden="true"><span class="sg sg-1"></span><span class="sg sg-2"></span></div>
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <h2 id="benefits-h">How it will make your life easier</h2>
+      <p class="lead">No more folders of paper, repeated tests, or explaining your history from memory.</p>
+    </div>
+    <div class="benefits" data-stagger-reveal>
+      {% for ico, title, body in [
+        ("layers", "Everything in one history", "Reports from different hospitals sit together on one timeline instead of in paper folders."),
+        ("globe", "Reach it anywhere", "Open your records from your phone at a pharmacy, a new clinic or abroad."),
+        ("key", "You decide who sees what", "Mark each record public or private. Private ones need your approval, for as long as you choose."),
+        ("siren", "Covered in an emergency", "If you can't answer, a verified doctor can open your records. You're told, and it's logged."),
+        ("history", "See every access", "A plain list of who opened your records, when, and from which hospital."),
+        ("stethoscope", "Better first visits", "A new doctor sees your allergies and prescriptions before writing a new one."),
+      ] %}
+      <article class="benefit" data-reveal style="--i:{{ loop.index0 }}">
+        <span class="benefit-icon">{{ icon(ico) }}</span>
+        <h3>{{ title }}</h3>
+        <p>{{ body }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# 3. Health history #}
+<section class="section" id="history" aria-labelledby="history-h">
+  <div class="container history-grid">
+    <div class="history-visual" aria-hidden="true">
+      <div class="history-demo" data-reveal="scale">
+        <div class="hd-head"><strong>Health history</strong><span class="badge badge-info">Ayesha S.</span></div>
+        <ol class="timeline hd-timeline">
+          <li class="is-created" style="--d:0"><strong>Complete blood count</strong> <span class="badge badge-public">Public</span><div class="when">Lab report · Lakeview General</div></li>
+          <li class="is-visibility" style="--d:1"><strong>Cardiology consultation</strong> <span class="badge badge-private">Private</span><div class="when">Clinical note · Riverside Medical Centre</div></li>
+          <li style="--d:2"><strong>Iron supplementation</strong> <span class="badge badge-private">Private</span><div class="when">Prescription · updated 2 times</div></li>
+          <li class="is-created" style="--d:3"><strong>COVID-19 booster</strong> <span class="badge badge-public">Public</span><div class="when">Vaccination · uploaded by patient</div></li>
+        </ol>
+      </div>
+      <div class="glass-chip hv-chip-1">{{ icon("edit") }}<span><strong>Dose changed 10 → 5 mg</strong><span>by Dr. Tanvir Hasan · old value kept</span></span></div>
+      <div class="glass-chip hv-chip-2">{{ icon("upload") }}<span><strong>Uploaded by Ayesha Siddiqua</strong><span>patient · 12 Oct</span></span></div>
+    </div>
+    <div data-reveal>
+      <h2 id="history-h">Your health history, kept honestly</h2>
+      <p class="lead">Every record shows who wrote it, when it last changed and exactly what changed. Nothing is silently edited.</p>
+      <dl class="stats">
+        <div><dt>Hospitals connected</dt><dd data-count="{{ stats.hospitals }}">{{ stats.hospitals }}</dd></div>
+        <div><dt>Verified doctors</dt><dd data-count="{{ stats.doctors }}">{{ stats.doctors }}</dd></div>
+        <div><dt>Records kept</dt><dd data-count="{{ stats.records }}">{{ stats.records }}</dd></div>
+        <div><dt>Accesses logged</dt><dd data-count="100" data-suffix="%">100%</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+{# 4. Get started (a real sequence, so it's numbered) #}
+<section class="section section-tint" id="get-started" aria-labelledby="start-h">
+  <div class="container">
+    <div class="section-head" data-reveal><h2 id="start-h">Get started in four steps</h2><p class="lead">Most people are set up in under five minutes.</p></div>
+    <ol class="start-steps" data-reveal>
+      {% for ico, title, body in [
+        ("user", "Create your account", "Sign up with your mobile number. You get your Unique Patient ID straight away."),
+        ("upload", "Add your records", "Upload past reports, or let your doctor add new ones after a visit."),
+        ("lock", "Choose what's private", "Everything starts private. Make allergies or blood group public if you want any doctor to see them."),
+        ("key", "Share your ID", "Give your doctor your UPI. Approve their request with the code we text you."),
+      ] %}
+      <li class="start-step" style="--i:{{ loop.index0 }}"><span class="step-num" aria-hidden="true">{{ loop.index }}</span><span class="step-icon" aria-hidden="true">{{ icon(ico) }}</span><h3>{{ title }}</h3><p>{{ body }}</p></li>
+      {% endfor %}
+    </ol>
+    <div class="form-actions" style="justify-content:center;margin-top:2rem" data-reveal>
+      <a class="btn btn-accent btn-lg" href="/register">Create your free account</a>
+    </div>
+  </div>
+</section>
+
+{# 5. FAQ #}
+<section class="section" id="faq" aria-labelledby="faq-h">
+  <div class="container faq-grid">
+    <div data-reveal="left"><h2 id="faq-h">Questions people ask</h2><p class="lead">Can't find yours? <button type="button" class="link-btn" data-open-modal="contact-modal">Send us a message</button>.</p></div>
+    <div class="accordion" data-reveal>
+      {% for q, a in faq %}
+      <div class="accordion-item">
+        <h3 class="acc-h"><button type="button" class="accordion-trigger" aria-expanded="false" aria-controls="faq-p-{{ loop.index0 }}" id="faq-t-{{ loop.index0 }}">{{ q }}<svg class="chev" aria-hidden="true"><use href="#i-chevron-down"/></svg></button></h3>
+        <div class="accordion-panel" id="faq-p-{{ loop.index0 }}" role="region" aria-labelledby="faq-t-{{ loop.index0 }}" hidden><div><p>{{ a }}</p></div></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# 6. Newsletter #}
+<section class="section section-tight-top" aria-labelledby="news-h">
+  <div class="container">
+    <div class="newsletter" data-reveal="scale">
+      <span class="nl-light nl-light-1" aria-hidden="true"></span><span class="nl-light nl-light-2" aria-hidden="true"></span>
+      <div><h2 id="news-h">Get CDHRS updates</h2><p>One short email when something important changes. No spam, unsubscribe any time.</p></div>
+      <form class="newsletter-form" data-api-form="/api/v1/newsletter" data-reset-on-success novalidate>
+        <div class="field"><label for="nl-email" class="visually-hidden">Email address</label>
+          <input class="input" id="nl-email" name="email" type="email" required maxlength="255" placeholder="you@example.com" autocomplete="email">
+          <p class="error" data-error-for="email" role="alert"></p></div>
+        <button type="submit" class="btn btn-lg">{{ icon("send") }}Subscribe</button>
+      </form>
+    </div>
+  </div>
+</section>
+{# 7. About us (last section before the footer) #}
+<section class="section section-tint section-glass" id="about" aria-labelledby="about-h">
+  <div class="section-glows" aria-hidden="true"><span class="sg sg-1"></span><span class="sg sg-2"></span></div>
+  <div class="container about-grid">
+    <div data-reveal="left">
+      <h2 id="about-h">About us</h2>
+      <p class="lead">We are Team CDHRS. We built this system around a simple idea: your health records belong to you.</p>
+      <p>Hospitals add to one shared history, doctors read it only with your permission, and every access leaves a trace you can check. No more carrying paper files between clinics or repeating the same tests because a report went missing.</p>
+      <ul class="about-points" aria-label="What we stand for">
+        <li>{{ icon("lock") }}<span><strong>You own your records</strong><span>Only you decide what is public and what stays private.</span></span></li>
+        <li>{{ icon("key") }}<span><strong>Consent before access</strong><span>Doctors ask first, and access ends when they sign out.</span></span></li>
+        <li>{{ icon("history") }}<span><strong>Nothing happens unseen</strong><span>Every view, download and emergency access is on your record.</span></span></li>
+      </ul>
+    </div>
+    <div class="about-visual" data-reveal="scale">
+      <div class="about-photo">
+        <picture>
+          <source type="image/avif" srcset="{{ static_url('img/photos/doctor-480.avif') }} 480w, {{ static_url('img/photos/doctor-800.avif') }} 800w" sizes="(max-width: 860px) 80vw, 400px">
+          <source type="image/webp" srcset="{{ static_url('img/photos/doctor-480.webp') }} 480w, {{ static_url('img/photos/doctor-800.webp') }} 800w" sizes="(max-width: 860px) 80vw, 400px">
+          <img src="{{ static_url('img/photos/doctor-480.jpg') }}" width="480" height="600" loading="lazy" decoding="async" alt="A doctor in a white coat with a stethoscope, arms folded">
+        </picture>
+      </div>
+      <div class="glass-chip av-chip-1" aria-hidden="true">{{ icon("shield") }}<span><strong>Private by default</strong><span>Every new record</span></span></div>
+      <div class="glass-chip av-chip-2" aria-hidden="true">{{ icon("check-circle") }}<span><strong>Consent with SMS code</strong><span>Ends when the doctor signs out</span></span></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

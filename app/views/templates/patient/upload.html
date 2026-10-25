@@ -1,0 +1,51 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Upload a document{% endblock %}
+{% block page_id %}patient-upload{% endblock %}
+{% block page_module %}upload{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Upload a document</h1><p>Add a prescription, lab report, scan or note to your history.</p></div></div>
+<div class="grid-main-side">
+  <section class="card">
+    <div class="alert alert-danger" data-form-error role="alert" hidden>{{ icon("alert") }}<p></p></div>
+    <form data-api-form="/api/v1/patient/records" data-redirect enctype="multipart/form-data" novalidate>
+      <div class="field">
+        <span class="label" id="file-label">File</span>
+        <label class="dropzone" data-dropzone>
+          {{ icon("upload") }}
+          <span class="dz-text"><strong>Choose a file</strong> or drag it here</span>
+          <span class="small">PDF, PNG, JPG or WebP · up to {{ max_mb }} MB</span>
+          <span class="dz-file" data-dz-file hidden></span>
+          <input type="file" name="file" accept="{{ accept }}" aria-labelledby="file-label" data-max-mb="{{ max_mb }}">
+        </label>
+        <p class="error" data-error-for="file" role="alert"></p>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label for="title">Title<span class="req" aria-hidden="true">*</span></label><input class="input" id="title" name="title" required minlength="2" maxlength="200" placeholder="e.g. Blood test, March 2026"><p class="error" data-error-for="title" role="alert"></p></div>
+        <div class="field"><label for="information_type">Type<span class="req" aria-hidden="true">*</span></label>
+          <select class="select" id="information_type" name="information_type" required><option value="">Choose…</option>{% for v, l in types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select><p class="error" data-error-for="information_type" role="alert"></p></div>
+        <div class="field"><label for="information_date">Date of the record<span class="req" aria-hidden="true">*</span></label><input class="input" id="information_date" name="information_date" type="date" required max="{{ today }}" min="1900-01-01" value="{{ today }}"><p class="error" data-error-for="information_date" role="alert"></p></div>
+      </div>
+      <div class="field"><label for="details">Notes</label><textarea class="textarea" id="details" name="details" maxlength="10000" placeholder="Anything that helps a doctor understand this document"></textarea><p class="error" data-error-for="details" role="alert"></p></div>
+      <fieldset class="field" style="border:0;padding:0">
+        <legend class="label">Who can see it</legend>
+        <div class="segmented" role="radiogroup">
+          <label><input type="radio" name="visibility" value="private" checked><span>Private</span></label>
+          <label><input type="radio" name="visibility" value="public"><span>Public</span></label>
+        </div>
+        <p class="hint">Private: only doctors you approve. Public: any verified clinician who has your patient ID.</p>
+      </fieldset>
+      <div class="form-actions"><button type="submit" class="btn btn-primary">{{ icon("upload") }}Upload document</button><a class="btn btn-ghost" href="/patient/records">Cancel</a></div>
+    </form>
+  </section>
+  <aside class="card">
+    <h2 style="font-size:var(--fs-md)">Before you upload</h2>
+    <ul class="small muted" style="padding-left:1.1rem;display:grid;gap:.5rem">
+      <li>Files are checked: only real PDFs and images are accepted.</li>
+      <li>Your file is stored with a random name and is never publicly linkable.</li>
+      <li>Every change to this record is kept in its update history.</li>
+      <li>You can delete documents you uploaded; records added by doctors can only be made private.</li>
+    </ul>
+  </aside>
+</div>
+{% endblock %}

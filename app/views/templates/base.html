@@ -1,0 +1,63 @@
+{% from "partials/macros.html" import icon, brand_mark %}
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CDHRS{% endblock %} · Centralized Digital Health Record System</title>
+  <meta name="description" content="{% block description %}CDHRS keeps your medical records in one secure place. You decide which doctor sees what, and you can see every access.{% endblock %}">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  {% if current_user %}<meta name="login-url" content="{{ current_user.login_path }}"><meta name="session-expires" content="{{ session_seconds }}"><meta name="session-warning" content="{{ session_warning }}">{% endif %}
+  <meta name="theme-color" content="#0F4C81" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A1424" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  {# No-flash theme: runs before first paint. Also marks JS as available for reveal animations,
+     with a safety net that un-hides content if the module bundle fails to load. #}
+  <script nonce="{{ csp_nonce }}">
+    (function () {
+      var d = document.documentElement, t = null;
+      try { t = localStorage.getItem("cdhrs-theme"); } catch (e) {}
+      if (t !== "light" && t !== "dark") t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      d.setAttribute("data-theme", t);
+      d.classList.add("js");
+      setTimeout(function () { if (!d.classList.contains("motion-ready")) d.classList.remove("js"); }, 2500);
+    })();
+  </script>
+  <link rel="preload" href="{{ static_url('fonts/public-sans-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ static_url('fonts/source-serif-4-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+  {# Public pages: core CSS inlined (built mode) so first paint needs no CSS request.
+     Portal pages: fingerprinted, long-cached <link>s (repeat visits hit the cache). #}
+  {% block stylesheets %}{{ css_tag('css/core.css', csp_nonce, inline=True) }}{% endblock %}
+  {% block head %}{% endblock %}
+  <link rel="icon" href="{{ static_url('img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="modulepreload" href="{{ static_url('js/main.js') }}">
+  <script type="module" src="{{ static_url('js/main.js') }}"></script>
+</head>
+<body data-page="{% block page_id %}{% endblock %}" data-module="{% block page_module %}{% endblock %}" class="{% block body_class %}{% endblock %}">
+  {% include "partials/icons.html" %}
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="route-loader" aria-hidden="true"></div>
+  {% block body %}{% endblock %}
+
+  <div class="fab-stack">
+    <button type="button" class="fab fab-top" data-back-to-top aria-label="Back to top">{{ icon("arrow-up") }}</button>
+    <button type="button" class="fab fab-contact" data-open-modal="contact-modal" aria-label="Contact us" aria-haspopup="dialog">{{ icon("message") }}</button>
+  </div>
+
+  <div class="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+
+  {% include "partials/contact_modal.html" %}
+  {% include "partials/confirm_modal.html" %}
+  {% if current_user %}{% include "partials/session_modal.html" %}{% endif %}
+
+  <div class="cookie-banner" data-cookie-banner role="region" aria-label="Cookie notice" hidden>
+    <p>We only use essential cookies: one to keep you signed in and one to protect forms. No tracking or advertising cookies.</p>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary btn-sm" data-cookie-choice="accepted">Got it</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-cookie-choice="essential">Essential only</button>
+      <a class="btn btn-ghost btn-sm" href="/privacy">Privacy notice</a>
+    </div>
+  </div>
+</body>
+</html>

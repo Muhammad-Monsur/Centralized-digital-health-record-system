@@ -1,0 +1,55 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, pagination %}
+{% block title %}Access history{% endblock %}
+{% block page_id %}patient-access{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Access history</h1><p>Every time someone else opens or changes your records, it's listed here.</p></div>
+  <div class="segmented" role="group" aria-label="Filter">
+    <a class="btn btn-sm {{ 'btn-primary' if not emergency_only else 'btn-ghost' }}" href="/patient/access-history" {% if not emergency_only %}aria-current="page"{% endif %}>All</a>
+    <a class="btn btn-sm {{ 'btn-emergency' if emergency_only else 'btn-ghost' }}" href="/patient/access-history?emergency=1" {% if emergency_only %}aria-current="page"{% endif %}>Emergency only</a>
+  </div>
+</div>
+
+{% if emergencies %}
+<section class="card" style="margin-bottom:1.5rem;border-color:color-mix(in srgb,var(--emergency) 40%,var(--border-soft))" aria-labelledby="em-h">
+  <div class="card-header"><h2 id="em-h">{{ icon("siren") }} Emergency access</h2></div>
+  <p class="small muted">A doctor can open your records without your approval only in an emergency. They must give a reason, and access ends automatically.</p>
+  <ul class="timeline">
+    {% for e in emergencies %}
+    <li class="is-archived">
+      <strong>{{ e.doctor.user.full_name }}</strong> <span class="small muted">at {{ e.hospital.name }}</span>
+      {% if e.ended_at is none and e.expires_at > now %}<span class="badge badge-emergency"><span class="pulse-dot" aria-hidden="true"></span>Active now</span>{% endif %}
+      <div class="when">{{ e.accessed_at|dt }} · until {{ (e.ended_at or e.expires_at)|dt }}</div>
+      <p class="diff">Reason: {{ e.reason }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="card card-flush">
+  {% if page.items %}
+  <div class="table-wrap">
+  <table class="table stack">
+    <caption class="visually-hidden">Access history, newest first</caption>
+    <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">What happened</th><th scope="col">Record</th></tr></thead>
+    <tbody>
+    {% for a in page.items %}
+    <tr class="{{ 'is-emergency' if a.emergency_access_id }}">
+      <td data-label="When"><time datetime="{{ a.accessed_at|iso }}">{{ a.accessed_at|dt }}</time></td>
+      <td data-label="Who"><strong>{{ "You" if a.user_id == cu.id else a.user.full_name }}</strong>
+        {% if a.user.doctor %}<div class="small muted">{{ a.user.doctor.specialization }} · {{ a.user.doctor.hospital.name }}</div>{% elif a.user.staff %}<div class="small muted">{{ a.user.staff.position }}</div>{% endif %}</td>
+      <td data-label="What">{% if a.emergency_access_id %}<span class="badge badge-emergency">{{ icon("siren") }}Emergency</span> {% elif a.consent_id %}<span class="badge badge-info">Consent</span> {% endif %}{{ labels[a.access_type] }}</td>
+      <td data-label="Record">{% if a.information_id and a.information_id in titles %}<a href="/patient/records/{{ a.information_id }}">{{ titles[a.information_id] }}</a>{% else %}<span class="muted">—</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {{ pagination(page, "/patient/access-history" ~ ("?emergency=1" if emergency_only else "")) }}
+  {% else %}
+  <div class="empty">{{ icon("history") }}<h2>{{ "No emergency access on record" if emergency_only else "No one else has accessed your records" }}</h2><p>When a doctor views your records, the visit is logged here.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

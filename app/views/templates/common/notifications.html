@@ -1,0 +1,30 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, pagination %}
+{% block title %}Notifications{% endblock %}
+{% block page_id %}notifications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Notifications</h1><p>Requests, consent changes and security events.</p></div>
+  {% if unread_count %}<form data-api-form="/api/v1/notifications/read" data-reload><button type="submit" class="btn">{{ icon("check") }}Mark all as read</button></form>{% endif %}
+</div>
+<section class="card card-flush">
+  {% if page.items %}
+  <ul class="record-list">
+    {% for n in page.items %}
+    <li class="record-row">
+      <span class="ri" style="{% if n.kind.value == 'emergency' %}background:var(--emergency-soft);color:var(--emergency){% endif %}">{{ icon({"access_request":"key","consent":"shield","emergency":"siren","record":"file","account":"user"}.get(n.kind.value, "bell")) }}</span>
+      <div class="rt">
+        {% if n.link %}<a href="{{ n.link }}">{{ n.title }}</a>{% else %}<strong>{{ n.title }}</strong>{% endif %}
+        <div class="small muted" style="margin-top:2px">{{ n.body }}</div>
+        <div class="rm"><span>{{ n.created_at|dt }}</span></div>
+      </div>
+      <div class="rb">{% if not n.is_read %}<span class="badge badge-info">New</span>{% endif %}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {{ pagination(page, base ~ "/notifications") }}
+  {% else %}
+  <div class="empty">{{ icon("bell") }}<h2>You're all caught up</h2><p>New notifications will appear here.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

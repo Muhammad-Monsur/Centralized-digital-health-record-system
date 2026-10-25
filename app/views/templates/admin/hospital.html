@@ -1,0 +1,50 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, status_badge %}
+{% block title %}{{ h.name }}{% endblock %}
+{% block page_id %}admin-hospital{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+{% if can_all %}<nav class="small" aria-label="Breadcrumb" style="margin-bottom:1rem"><a href="/admin/hospitals">Hospitals</a> / <span aria-current="page">{{ h.name }}</span></nav>{% endif %}
+<div class="page-head">
+  <div><h1>{{ h.name }}</h1><p>Registration {{ h.registration_number }} · {{ info.doctors if info else 0 }} doctors · {{ info.staff if info else 0 }} staff</p></div>
+  <div class="inline-list">{{ status_badge(h.status.value) }}</div>
+</div>
+<div class="grid-main-side">
+  <section class="card">
+    <h2 style="font-size:var(--fs-lg)">Hospital details</h2>
+    <form data-api-form="/api/v1/admin/hospitals/{{ h.hospital_id }}" data-method="PUT" novalidate>
+      <div class="field"><label for="h-name">Name</label><input class="input" id="h-name" name="name" value="{{ h.name }}" required minlength="3" maxlength="150"><p class="error" data-error-for="name" role="alert"></p></div>
+      <div class="form-grid">
+        <div class="field"><label for="h-phone">Phone</label><input class="input" id="h-phone" name="phone" type="tel" value="{{ h.phone }}" required maxlength="20"><p class="error" data-error-for="phone" role="alert"></p></div>
+      </div>
+      <div class="field"><label for="h-addr">Address</label><input class="input" id="h-addr" name="address" value="{{ h.address }}" required minlength="5" maxlength="255"><p class="error" data-error-for="address" role="alert"></p></div>
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </form>
+  </section>
+  <aside style="display:grid;gap:1.25rem;align-content:start">
+    <section class="card">
+      <h2 style="font-size:var(--fs-md)">Administrators</h2>
+      {% if info and info.admins %}<ul class="small" style="padding-left:1.1rem">{% for a in info.admins %}<li>{{ a }}</li>{% endfor %}</ul>{% else %}<p class="small muted">No hospital administrator yet.</p>{% endif %}
+      {% if can_all %}<button type="button" class="btn btn-sm" data-open-modal="account-modal" data-kind="hospital_admin">{{ icon("plus") }}Create hospital admin</button>{% endif %}
+    </section>
+    <section class="card">
+      <h2 style="font-size:var(--fs-md)">Accounts</h2>
+      <div class="form-actions" style="flex-direction:column;align-items:stretch">
+        <button type="button" class="btn btn-primary" data-open-modal="account-modal" data-kind="doctor">{{ icon("plus") }}Create doctor</button>
+        <button type="button" class="btn" data-open-modal="account-modal" data-kind="staff">{{ icon("plus") }}Create staff</button>
+        <a class="btn btn-ghost" href="/admin/users">See all accounts</a>
+      </div>
+    </section>
+    {% if can_all %}
+    <section class="card">
+      <h2 style="font-size:var(--fs-md)">Status</h2>
+      <p class="small muted">Deactivating a hospital immediately disables clinical access for all its doctors and staff.</p>
+      {% if h.status.value == "active" %}<button type="button" class="btn btn-danger btn-block" data-hospital-status="inactive" data-hospital="{{ h.hospital_id }}" data-name="{{ h.name }}">Deactivate hospital</button>
+      {% else %}<button type="button" class="btn btn-primary btn-block" data-hospital-status="active" data-hospital="{{ h.hospital_id }}" data-name="{{ h.name }}">Reactivate hospital</button>{% endif %}
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% set hospitals = [h] %}{% set default_kind = "doctor" %}{% set fixed_hospital = h %}
+{% include "admin/_account_modal.html" %}
+{% endblock %}

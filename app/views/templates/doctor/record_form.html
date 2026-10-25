@@ -1,0 +1,31 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}{{ "Edit record" if r else "Add a record" }}{% endblock %}
+{% block page_id %}doctor-record-form{% endblock %}
+{% block page_module %}upload{% endblock %}
+{% block content %}
+<nav class="small" aria-label="Breadcrumb" style="margin-bottom:1rem"><a href="/doctor/patients/{{ p.upi }}">{{ p.user.full_name }} ({{ p.upi }})</a> / <span aria-current="page">{{ "Edit record" if r else "Add a record" }}</span></nav>
+<div class="page-head"><div><h1>{{ "Edit record" if r else "Add a record" }}</h1><p>{% if r %}Changes are saved to the record's update history and the patient is notified.{% else %}The patient is notified. New records are private; only the patient can change that.{% endif %}</p></div></div>
+<section class="card" style="max-width:820px">
+  <div class="alert alert-danger" data-form-error role="alert" hidden>{{ icon("alert") }}<p></p></div>
+  <form {% if r %}data-api-form="/api/v1/doctor/patients/{{ p.upi }}/records/{{ r.information_id }}" data-method="PATCH"{% else %}data-api-form="/api/v1/doctor/patients/{{ p.upi }}/records" enctype="multipart/form-data"{% endif %} data-redirect novalidate>
+    {% if not r %}
+    <div class="field">
+      <span class="label" id="file-label">File (optional)</span>
+      <label class="dropzone" data-dropzone>{{ icon("upload") }}<span><strong>Choose a file</strong> or drag it here</span><span class="small">PDF, PNG, JPG or WebP · up to {{ max_mb }} MB</span><span class="dz-file" data-dz-file hidden></span>
+        <input type="file" name="file" accept="{{ accept }}" aria-labelledby="file-label" data-max-mb="{{ max_mb }}"></label>
+      <p class="error" data-error-for="file" role="alert"></p>
+    </div>
+    {% endif %}
+    <div class="form-grid">
+      <div class="field"><label for="title">Title<span class="req" aria-hidden="true">*</span></label><input class="input" id="title" name="title" required minlength="2" maxlength="200" value="{{ r.title if r else '' }}"><p class="error" data-error-for="title" role="alert"></p></div>
+      <div class="field"><label for="information_type">Type<span class="req" aria-hidden="true">*</span></label>
+        <select class="select" id="information_type" name="information_type" required><option value="">Choose…</option>{% for v, l in types %}<option value="{{ v }}" {% if r and r.information_type.value == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><p class="error" data-error-for="information_type" role="alert"></p></div>
+      <div class="field"><label for="information_date">Date<span class="req" aria-hidden="true">*</span></label><input class="input" id="information_date" name="information_date" type="date" required min="1900-01-01" max="{{ today }}" value="{{ r.information_date.isoformat() if r else today }}"><p class="error" data-error-for="information_date" role="alert"></p></div>
+    </div>
+    <div class="field"><label for="details">Clinical notes</label><textarea class="textarea" id="details" name="details" maxlength="10000" rows="8">{{ r.details if r else '' }}</textarea><p class="error" data-error-for="details" role="alert"></p></div>
+    {% if not r %}<p class="hint small" style="margin-top:-.25rem">{{ icon("lock") }} The record is saved as <strong>private</strong>. Only the patient can make it public. While it's private, you'll need the patient's consent to open or edit it again, like any other private record.</p>{% endif %}
+    <div class="form-actions"><button type="submit" class="btn btn-primary">{{ "Save changes" if r else "Add record" }}</button><a class="btn btn-ghost" href="/doctor/patients/{{ p.upi }}{% if r %}/records/{{ r.information_id }}{% endif %}">Cancel</a></div>
+  </form>
+</section>
+{% endblock %}

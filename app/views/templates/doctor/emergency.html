@@ -1,0 +1,29 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, pagination %}
+{% block title %}Emergency access log{% endblock %}
+{% block page_id %}doctor-emergency{% endblock %}
+{% block page_module %}doctor-patient{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Emergency access log</h1><p>Every time you used emergency access. Your hospital administrator reviews these.</p></div></div>
+<section class="card card-flush">
+  {% if page.items %}
+  <div class="table-wrap"><table class="table stack">
+    <thead><tr><th scope="col">Patient</th><th scope="col">Reason</th><th scope="col">Started</th><th scope="col">Ends</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>
+    {% for e in page.items %}
+    {% set live = e.ended_at is none and e.expires_at > now %}
+    <tr class="{{ 'is-emergency' if live }}">
+      <td data-label="Patient"><a href="/doctor/patients/{{ e.patient.upi }}"><strong>{{ e.patient.user.full_name }}</strong></a><div class="small muted upi">{{ e.patient.upi }}</div></td>
+      <td data-label="Reason" style="max-width:380px">{{ e.reason }}</td>
+      <td data-label="Started">{{ e.accessed_at|dt }}</td>
+      <td data-label="Ends">{% if live %}<span class="badge badge-emergency"><span class="pulse-dot" aria-hidden="true"></span>{{ e.expires_at|dt("%I:%M %p") }}</span>{% else %}{{ (e.ended_at or e.expires_at)|dt }}{% endif %}</td>
+      <td class="actions">{% if live %}<button type="button" class="btn btn-sm btn-ghost" data-end-emergency="{{ e.emergency_access_id }}">End now</button>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody></table></div>
+  {{ pagination(page, "/doctor/emergency") }}
+  {% else %}
+  <div class="empty">{{ icon("siren") }}<h2>No emergency access used</h2><p>Emergency access is available on a patient's page when consent isn't possible.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

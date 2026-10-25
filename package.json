@@ -1,0 +1,13 @@
+{
+  "name": "cdhrs-assets",
+  "private": true,
+  "description": "Build tooling only (not needed at runtime): bundles, minifies and fingerprints static assets.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build_assets.mjs",
+    "clean": "node scripts/build_assets.mjs --clean"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

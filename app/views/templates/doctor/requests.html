@@ -1,0 +1,31 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, status_badge, pagination %}
+{% block title %}My access requests{% endblock %}
+{% block page_id %}doctor-requests{% endblock %}
+{% block page_module %}doctor-patient{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My access requests</h1><p>Requests you've sent to patients for their private records.</p></div></div>
+<section class="card card-flush">
+  {% if page.items %}
+  <div class="table-wrap"><table class="table stack">
+    <thead><tr><th scope="col">Patient</th><th scope="col">Reason</th><th scope="col">Sent</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>
+    {% for r in page.items %}
+    {% set c = consents.get(r.request_id) %}
+    {% set state = r.status.value %}
+    {% if c %}{% set state = ("active" if c.status.value == "active" and c.expires_at and c.expires_at > now else ("expired" if c.status.value == "active" else c.status.value)) %}{% endif %}
+    <tr>
+      <td data-label="Patient"><a href="/doctor/patients/{{ r.patient.upi }}"><strong>{{ r.patient.user.full_name }}</strong></a><div class="small muted upi">{{ r.patient.upi }}</div></td>
+      <td data-label="Reason" style="max-width:360px">{{ r.purpose }}</td>
+      <td data-label="Sent">{{ r.requested_at|dt }}</td>
+      <td data-label="Status">{{ status_badge(state) }}{% if state == "active" %}<div class="small muted">until {{ c.expires_at|dt }}</div>{% endif %}</td>
+      <td class="actions">{% if r.status.value == "pending" %}<button type="button" class="btn btn-sm btn-ghost" data-cancel-request="{{ r.request_id }}">Cancel</button>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody></table></div>
+  {{ pagination(page, "/doctor/requests") }}
+  {% else %}
+  <div class="empty">{{ icon("key") }}<h2>No requests yet</h2><p>Open a patient by their UPI and choose "Request access".</p><a class="btn btn-primary" href="/doctor/search">Find a patient</a></div>
+  {% endif %}
+</section>
+{% endblock %}

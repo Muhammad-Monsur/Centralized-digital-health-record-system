@@ -1,0 +1,100 @@
+# Development (database + cache only):
+#   docker compose up -d mysql redis
+#
+# Full stack, load balanced (nginx -> 3 app instances, shared Redis sessions):
+#   docker compose --profile full up -d --build
+#   docker compose --profile full run --rm app1 alembic upgrade head
+#   docker compose --profile full run --rm app1 python -m scripts.seed --demo   # demo data (refused if APP_ENV=production)
+#   open http://localhost:8080
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: cdhrs
+      MYSQL_USER: cdhrs
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-cdhrs_dev_pw}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_dev_pw}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    # Bound to localhost only (dev tools on this machine). Never expose MySQL publicly.
+    ports: ["127.0.0.1:3306:3306"]
+    volumes: [mysql_data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Password-protected and localhost-only: Redis holds sessions, so anyone who can write to
+    # it could forge a login.
+    command: ["sh", "-c", "exec redis-server --appendonly yes --maxmemory-policy noeviction --requirepass \"$${REDIS_PASSWORD}\""]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_dev_pw}
+    ports: ["127.0.0.1:6379:6379"]
+    volumes: [redis_data:/data]
+
+  # Three identical app instances. Any of them can serve any request because sessions,
+  # rate-limit counters and the cache live in Redis, and uploads/backups on a shared volume.
+  app1: &app
+    profiles: ["full"]
+    build: .
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      APP_ENV: ${APP_ENV:-development}  # set to production behind real HTTPS
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      DATABASE_URL: mysql+pymysql://cdhrs:${MYSQL_PASSWORD:-cdhrs_dev_pw}@mysql:3306/cdhrs?charset=utf8mb4
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_pw}@redis:6379/0
+      BASE_URL: ${BASE_URL:-http://localhost:8080}
+      WEB_CONCURRENCY: "2"
+      INSTANCE: app1
+    volumes: [storage:/app/storage]
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_started }
+  app2:
+    <<: *app
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      DATABASE_URL: mysql+pymysql://cdhrs:${MYSQL_PASSWORD:-cdhrs_dev_pw}@mysql:3306/cdhrs?charset=utf8mb4
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_pw}@redis:6379/0
+      BASE_URL: ${BASE_URL:-http://localhost:8080}
+      WEB_CONCURRENCY: "2"
+      INSTANCE: app2
+  app3:
+    <<: *app
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      DATABASE_URL: mysql+pymysql://cdhrs:${MYSQL_PASSWORD:-cdhrs_dev_pw}@mysql:3306/cdhrs?charset=utf8mb4
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_dev_pw}@redis:6379/0
+      BASE_URL: ${BASE_URL:-http://localhost:8080}
+      WEB_CONCURRENCY: "2"
+      INSTANCE: app3
+
+  nginx:
+    profiles: ["full"]
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports: ["8080:80"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_dist:/srv/static:ro
+    depends_on: [app1, app2, app3]
+
+  # Copies the fingerprinted build into a volume nginx serves directly (and a CDN can pull from).
+  static:
+    profiles: ["full"]
+    build: .
+    command: ["sh", "-c", "cp -r app/static/. /out/ && echo static ready"]
+    volumes: [static_dist:/out]
+    user: root
+
+volumes:
+  mysql_data:
+  redis_data:
+  storage:
+  static_dist:

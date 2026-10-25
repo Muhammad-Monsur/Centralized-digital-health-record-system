@@ -1,0 +1,47 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Admin overview{% endblock %}
+{% block page_id %}admin-dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ "System overview" if is_sys else d.scope_name }}</h1><p>{{ "Everything across CDHRS." if is_sys else "Your hospital's accounts, access and activity." }}</p></div>
+  <div class="form-actions" style="margin:0">
+    {% if cu.can("admin.user.manage") %}<a class="btn btn-primary" href="/admin/users?new=doctor">{{ icon("plus") }}Create doctor account</a>{% endif %}
+    {% if is_sys %}<a class="btn" href="/admin/hospitals">{{ icon("hospital") }}Hospitals</a>{% endif %}
+  </div>
+</div>
+
+{% if d.active_emergencies %}<div class="alert alert-emergency" role="status">{{ icon("siren") }}<p><strong>{{ d.active_emergencies }} emergency access session{{ "s" if d.active_emergencies != 1 }} active now.</strong> <a href="/admin/emergency?active=1">Review</a></p></div>{% endif %}
+{% if d.pending_doctors %}<div class="alert alert-warning">{{ icon("clock") }}<p>{{ d.pending_doctors }} doctor licence{{ "s" if d.pending_doctors != 1 }} waiting for verification. <a href="/admin/users?role=doctor&verification=pending">Review</a></p></div>{% endif %}
+
+<div class="stat-grid" data-stagger>
+  {% if is_sys %}<div class="stat"><div class="stat-label">{{ icon("hospital") }}Hospitals</div><div class="stat-value" data-count="{{ d.hospitals }}">{{ d.hospitals }}</div></div>{% endif %}
+  <div class="stat"><div class="stat-label">{{ icon("stethoscope") }}Doctors</div><div class="stat-value" data-count="{{ d.doctors }}">{{ d.doctors }}</div><div class="stat-foot">{{ d.staff }} healthcare staff</div></div>
+  {% if d.patients is not none %}<div class="stat"><div class="stat-label">{{ icon("users") }}Patients</div><div class="stat-value" data-count="{{ d.patients }}">{{ d.patients }}</div></div>{% endif %}
+  <div class="stat"><div class="stat-label">{{ icon("key") }}Active consents</div><div class="stat-value" data-count="{{ d.active_consents }}">{{ d.active_consents }}</div><div class="stat-foot">{{ d.pending_requests }} request{{ "s" if d.pending_requests != 1 }} pending</div></div>
+  <div class="stat {{ 'is-alert' if d.emergency_7d }}"><div class="stat-label">{{ icon("siren") }}Emergency (7 days)</div><div class="stat-value" data-count="{{ d.emergency_7d }}">{{ d.emergency_7d }}</div></div>
+  <div class="stat"><div class="stat-label">{{ icon("clipboard") }}Audit events today</div><div class="stat-value" data-count="{{ d.audit_today }}">{{ d.audit_today }}</div>{% if is_sys %}<div class="stat-foot">{{ d.failed_logins_24h }} failed sign-ins (24 h)</div>{% endif %}</div>
+</div>
+
+<div class="grid-main-side">
+  <section class="card" aria-labelledby="chart-h">
+    <div class="card-header"><h2 id="chart-h">Record accesses, last 7 days</h2></div>
+    <div class="chart-bars" role="img" aria-label="Record accesses per day: {% for day, c in d.access_by_day %}{{ day }} {{ c }}{{ ', ' if not loop.last }}{% endfor %}">
+      {% for day, c in d.access_by_day %}<div class="bar" style="height:{{ (c / peak * 100)|round(0) if c else 2 }}%;--i:{{ loop.index0 }};animation-delay:calc(var(--i) * 60ms)" title="{{ day }}: {{ c }}"></div>{% endfor %}
+    </div>
+    <div class="chart-labels" aria-hidden="true">{% for day, c in d.access_by_day %}<span>{{ day }}<br><strong>{{ c }}</strong></span>{% endfor %}</div>
+  </section>
+  <section class="card" aria-labelledby="em-h">
+    <div class="card-header"><h2 id="em-h">Recent emergency access</h2><a class="btn btn-sm btn-ghost" href="/admin/emergency">All</a></div>
+    {% if d.recent_emergencies %}
+    <ul class="timeline">
+      {% for e in d.recent_emergencies %}
+      <li class="is-archived"><strong>{{ e.doctor.user.full_name }}</strong> <span class="small muted">→ <span class="upi">{{ e.patient.upi }}</span></span>
+        {% if e.ended_at is none and e.expires_at > now %}<span class="badge badge-emergency"><span class="pulse-dot" aria-hidden="true"></span>Active</span>{% endif %}
+        <div class="when">{{ e.accessed_at|dt }} · {{ e.hospital.name }}</div><p class="diff">{{ e.reason[:140] }}{{ "…" if e.reason|length > 140 }}</p></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted small">No emergency access has been used.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

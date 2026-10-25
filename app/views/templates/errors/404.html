@@ -1,0 +1,29 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon %}
+{% block title %}Page not found{% endblock %}
+{% block page_id %}error{% endblock %}
+{% block content %}
+<section class="container" style="padding:5rem 0 2rem;display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:center">
+  <div>
+    <p class="badge badge-info">Error 404</p>
+    <h1 style="margin-top:1rem">{{ title|default("Page not found") }}</h1>
+    <p class="lead">{{ message|default("The page you were looking for doesn't exist or has moved.") }}</p>
+    <div class="form-actions">
+      <a class="btn btn-primary" href="/">{{ icon("home") }}Go to the home page</a>
+      {% if current_user %}<a class="btn" href="{{ current_user.portal }}">{{ icon("grid") }}Open your dashboard</a>{% endif %}
+      <a class="btn btn-ghost" href="/help">Visit help</a>
+    </div>
+  </div>
+  <svg viewBox="0 0 360 260" role="img" aria-label="An empty folder with a magnifying glass" style="max-width:380px;justify-self:center">
+    <rect x="40" y="70" width="230" height="160" rx="16" style="fill:var(--primary-soft)"/>
+    <path d="M40 92a16 16 0 0 1 16-16h64l18 18h116a16 16 0 0 1 16 16" fill="none" stroke-width="4" stroke-linejoin="round" style="stroke:var(--primary)"/>
+    <rect x="40" y="100" width="230" height="130" rx="16" stroke-width="3" style="fill:var(--surface);stroke:var(--border)"/>
+    <text x="155" y="182" text-anchor="middle" font-family="Source Serif 4, serif" font-size="54" font-weight="700" opacity=".85" style="fill:var(--primary)">404</text>
+    <g style="animation: float-y 5s ease-in-out infinite">
+      <circle cx="268" cy="96" r="38" stroke-width="7" style="fill:var(--surface);stroke:var(--accent)"/>
+      <path d="m296 124 30 30" stroke-width="10" stroke-linecap="round" style="stroke:var(--accent)"/>
+      <path d="M254 90a16 16 0 0 1 16-12" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6" style="stroke:var(--accent)"/>
+    </g>
+  </svg>
+</section>
+{% endblock %}

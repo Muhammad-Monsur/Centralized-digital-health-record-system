@@ -1,0 +1,67 @@
+{% macro icon(name, cls="", label=None) -%}
+<svg class="icon {{ cls }}" width="24" height="24" {% if label %}role="img" aria-label="{{ label }}"{% else %}aria-hidden="true" focusable="false"{% endif %}><use href="#i-{{ name }}"/></svg>
+{%- endmacro %}
+
+{% macro copy_button(value, label="Copy") -%}
+<button type="button" class="copy-btn" data-copy="{{ value }}" aria-label="{{ label }}">
+  <svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg><span class="copied" aria-hidden="true">Copied!</span>
+</button>
+{%- endmacro %}
+
+{% macro password_field(id, name, label, autocomplete="current-password", hint=None, meter=False) -%}
+<div class="field">
+  <label for="{{ id }}">{{ label }}<span class="req" aria-hidden="true">*</span></label>
+  <div class="input-group">
+    <input class="input" id="{{ id }}" name="{{ name }}" type="password" autocomplete="{{ autocomplete }}" required maxlength="128" {% if hint %}aria-describedby="{{ id }}-hint"{% endif %}>
+    <button type="button" class="pw-toggle" data-pw-toggle="{{ id }}" aria-label="Show password" aria-pressed="false">
+      <svg width="20" height="20" aria-hidden="true"><use href="#i-eye"/></svg>
+    </button>
+  </div>
+  {% if meter %}<div class="pw-meter" data-pw-meter="{{ id }}" aria-hidden="true"><span></span></div>{% endif %}
+  {% if hint %}<p class="hint" id="{{ id }}-hint">{{ hint }}</p>{% endif %}
+  <p class="error" data-error-for="{{ name }}" role="alert"></p>
+</div>
+{%- endmacro %}
+
+{#- `attrs` is extra HTML attributes written literally in a template (never user input), so it is output unescaped. -#}
+{% macro field(id, name, label, type="text", required=True, value="", autocomplete=None, hint=None, attrs="") -%}
+<div class="field">
+  <label for="{{ id }}">{{ label }}{% if required %}<span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  <input class="input" id="{{ id }}" name="{{ name }}" type="{{ type }}" value="{{ value }}" {% if required %}required{% endif %} {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %} {% if hint %}aria-describedby="{{ id }}-hint"{% endif %} {{ attrs|safe }}>
+  {% if hint %}<p class="hint" id="{{ id }}-hint">{{ hint }}</p>{% endif %}
+  <p class="error" data-error-for="{{ name }}" role="alert"></p>
+</div>
+{%- endmacro %}
+
+{% macro visibility_badge(v) -%}
+{% if v == "public" %}<span class="badge badge-public"><svg aria-hidden="true"><use href="#i-globe"/></svg>Public</span>
+{% else %}<span class="badge badge-private"><svg aria-hidden="true"><use href="#i-lock"/></svg>Private</span>{% endif %}
+{%- endmacro %}
+
+{% macro status_badge(s) -%}
+{% set map = {"active":"success","verified":"success","approved":"success","pending":"warning","pending_otp":"warning","rejected":"danger","revoked":"danger","inactive":"danger","locked":"danger","expired":"","ended":"","cancelled":"","archived":""} %}
+<span class="badge {% if map.get(s) %}badge-{{ map.get(s) }}{% endif %}">{{ s|humanize }}</span>
+{%- endmacro %}
+
+{% macro pagination(page, base_url) -%}
+{% if page.total > page.per_page %}
+<nav class="pagination" aria-label="Pagination">
+  <span>Showing {{ (page.page - 1) * page.per_page + 1 }}–{{ [page.page * page.per_page, page.total]|min }} of {{ page.total }}</span>
+  <div class="pages">
+    {% set sep = "&" if "?" in base_url else "?" %}
+    <a class="btn btn-sm" href="{{ base_url }}{{ sep|safe }}page={{ page.page - 1 }}" {% if page.page <= 1 %}aria-disabled="true" tabindex="-1"{% endif %} aria-label="Previous page"><svg aria-hidden="true"><use href="#i-chevron-left"/></svg></a>
+    <span class="btn btn-sm btn-ghost" aria-current="page">Page {{ page.page }} of {{ page.pages }}</span>
+    <a class="btn btn-sm" href="{{ base_url }}{{ sep|safe }}page={{ page.page + 1 }}" {% if page.page >= page.pages %}aria-disabled="true" tabindex="-1"{% endif %} aria-label="Next page"><svg aria-hidden="true"><use href="#i-chevron-right"/></svg></a>
+  </div>
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{% macro brand_mark() -%}
+<svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+  <defs><linearGradient id="bm-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0F4C81"/><stop offset=".6" stop-color="#0284C7"/><stop offset="1" stop-color="#5B4FC9"/></linearGradient></defs>
+  <rect width="40" height="40" rx="11" fill="url(#bm-g)"/>
+  <rect x="9" y="11" width="22" height="18" rx="3.5" fill="none" stroke="#fff" stroke-width="2.2"/>
+  <path d="M20 15v10M15 20h10" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+</svg>
+{%- endmacro %}

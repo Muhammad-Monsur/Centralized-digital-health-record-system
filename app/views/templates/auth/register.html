@@ -1,0 +1,67 @@
+{% extends "layouts/public.html" %}
+{% from "partials/macros.html" import icon, password_field, field %}
+{% block title %}Create your patient account{% endblock %}
+{% block page_id %}register{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+{% set aside_title = "One ID for your whole medical history." %}
+{% set aside_text = "When you sign up you get a Unique Patient ID. Share it with a doctor and they can find your records, but only the parts you allow." %}
+<div class="auth-wrap">
+  {% include "partials/auth_aside.html" %}
+  <div class="auth-main">
+    <div class="auth-card wide">
+      <h1>Create your patient account</h1>
+      <p class="muted">Takes about two minutes. Your records start private; you choose what to share.</p>
+      <div class="alert alert-danger" data-form-error role="alert" hidden>{{ icon("alert") }}<p></p></div>
+      <form data-api-form="/api/v1/patients/register" data-redirect novalidate>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend class="label" style="margin-bottom:.75rem;font-size:var(--fs-md)">About you</legend>
+          <div class="form-grid">
+            {{ field("full_name", "full_name", "Full name", autocomplete="name", attrs='minlength="2" maxlength="120"') }}
+            <div class="field">
+              <label for="date_of_birth">Date of birth<span class="req" aria-hidden="true">*</span></label>
+              <input class="input" id="date_of_birth" name="date_of_birth" type="date" required min="1900-01-01" max="{{ today }}" autocomplete="bday" aria-describedby="dob-hint">
+              <p class="hint" id="dob-hint">Can't be in the future.</p>
+              <p class="error" data-error-for="date_of_birth" role="alert"></p>
+            </div>
+            <div class="field">
+              <label for="gender">Gender<span class="req" aria-hidden="true">*</span></label>
+              <select class="select" id="gender" name="gender" required>
+                <option value="">Choose…</option>
+                {% for g in genders %}<option value="{{ g.value }}">{{ "Prefer not to say" if g.value == "undisclosed" else g.value|capitalize }}</option>{% endfor %}
+              </select>
+              <p class="error" data-error-for="gender" role="alert"></p>
+            </div>
+            <div class="field">
+              <label for="blood_group">Blood group</label>
+              <select class="select" id="blood_group" name="blood_group">
+                {% for b in blood_groups %}<option value="{{ b.value }}" {% if b.value == "unknown" %}selected{% endif %}>{{ "I don't know" if b.value == "unknown" else b.value }}</option>{% endfor %}
+              </select>
+              <p class="error" data-error-for="blood_group" role="alert"></p>
+            </div>
+          </div>
+          {{ field("address", "address", "Address", required=False, autocomplete="street-address", attrs='maxlength="255"') }}
+        </fieldset>
+        <fieldset style="border:0;padding:0;margin:1rem 0 0">
+          <legend class="label" style="margin-bottom:.75rem;font-size:var(--fs-md)">Account</legend>
+          <div class="form-grid">
+            {{ field("username", "username", "Username", autocomplete="username", hint="3–50 characters: letters, numbers, dots, dashes or underscores, starting with a letter or number. Not case-sensitive.", attrs='minlength="3" maxlength="50" pattern="[A-Za-z0-9][A-Za-z0-9._\\-]{2,49}" autocapitalize="none" spellcheck="false"') }}
+            {{ field("email", "email", "Email", type="email", autocomplete="email", attrs='maxlength="255"') }}
+          </div>
+          {{ field("phone", "phone", "Mobile number", type="tel", autocomplete="tel", hint="We text a one-time code here when you approve access to your records. Example: 01712345678", attrs='maxlength="20" inputmode="tel"') }}
+          <div class="form-grid">
+            {{ password_field("password", "password", "Password", autocomplete="new-password", hint="10+ characters with upper and lower case, a number and a symbol.", meter=True) }}
+            {{ password_field("confirm_password", "confirm_password", "Confirm password", autocomplete="new-password") }}
+          </div>
+        </fieldset>
+        <div class="field">
+          <label class="checkbox"><input type="checkbox" name="accept_terms" required> <span>I have read the <a href="/privacy" target="_blank" rel="noopener">privacy notice</a> and agree to CDHRS storing my health records.</span></label>
+          <p class="error" data-error-for="accept_terms" role="alert"></p>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Create account</button>
+      </form>
+      <p class="small muted" style="margin-top:1.5rem">Already registered? <a href="/login">Sign in</a>. Doctor? Your hospital administrator creates your account; <a href="/doctor/login">sign in here</a>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

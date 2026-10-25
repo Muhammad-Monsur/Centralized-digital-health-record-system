@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block body %}
+<header class="site-header" data-sticky-header>
+  <div class="container">
+    <a class="brand" href="/">{{ brand_mark() }}<span>CDHRS<small>Digital Health Records</small></span></a>
+    <nav class="nav-primary" aria-label="Main">
+      <a href="/#benefits">How it helps</a>
+      <a href="/#get-started">Get started</a>
+      <a href="/#faq">FAQ</a>
+      <a href="/#about">About</a>
+      <a href="/help" {% if path == "/help" %}aria-current="page"{% endif %}>Help</a>
+    </nav>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost btn-icon" data-open-modal="search-modal" aria-haspopup="dialog" aria-label="Search the site">{{ icon("search") }}</button>
+      <button type="button" class="btn btn-ghost btn-icon theme-toggle" data-theme-toggle aria-label="Switch to dark theme">
+        <svg class="i-moon" width="20" height="20" aria-hidden="true"><use href="#i-moon"/></svg>
+        <svg class="i-sun" width="20" height="20" aria-hidden="true"><use href="#i-sun"/></svg>
+      </button>
+      {% if current_user %}
+        <a class="btn btn-primary hide-mobile" href="{{ current_user.portal }}">{{ icon("grid") }}Dashboard</a>
+      {% else %}
+        <a class="btn btn-ghost hide-mobile" href="/login">Sign in</a>
+        <a class="btn btn-primary hide-mobile" href="/register">Create account</a>
+      {% endif %}
+      <button type="button" class="btn btn-ghost btn-icon menu-toggle" data-drawer-open="site-drawer" aria-controls="site-drawer" aria-expanded="false" aria-label="Open menu">{{ icon("menu") }}</button>
+    </div>
+  </div>
+</header>
+
+<div class="drawer" id="site-drawer" hidden>
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <nav class="drawer-panel" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="drawer-head"><strong>Menu</strong><button type="button" class="btn btn-ghost btn-icon btn-sm" data-drawer-close aria-label="Close menu">{{ icon("x") }}</button></div>
+    <a class="drawer-link" href="/#benefits">How it helps</a>
+    <a class="drawer-link" href="/#get-started">Get started</a>
+    <a class="drawer-link" href="/#faq">FAQ</a>
+    <a class="drawer-link" href="/#about">About</a>
+    <a class="drawer-link" href="/help">Help</a>
+    <hr>
+    {% if current_user %}
+      <a class="btn btn-primary btn-block" href="{{ current_user.portal }}">Go to dashboard</a>
+    {% else %}
+      <a class="btn btn-primary btn-block" href="/register">Create account</a>
+      <a class="btn btn-block" href="/login">Sign in</a>
+    {% endif %}
+  </nav>
+</div>
+
+<div class="modal" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-title" hidden>
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-dialog" style="width:min(620px,100%);align-self:start;margin-top:10vh">
+    <button type="button" class="btn btn-ghost btn-icon btn-sm modal-close" data-close-modal aria-label="Close">{{ icon("x") }}</button>
+    <h2 id="search-title">Search CDHRS</h2>
+    <div class="search" role="search" data-global-search style="position:relative">
+      <label class="visually-hidden" for="global-search">Search pages, help and FAQ</label>
+      <input class="input" id="global-search" type="search" autocomplete="off" placeholder="Try: consent, emergency, upload" aria-controls="global-search-results" aria-expanded="false" aria-autocomplete="list" role="combobox" maxlength="80" autofocus>
+      <div class="search-results" id="global-search-results" role="listbox" aria-label="Search results" hidden style="position:static;margin-top:.5rem;box-shadow:none"></div>
+    </div>
+    <p class="small muted" style="margin-top:1rem">{% if current_user %}Signed in: your own records are searched too.{% else %}Sign in to search your own records.{% endif %}</p>
+  </div>
+</div>
+
+<main id="main" tabindex="-1" class="page-enter">
+  {% block content %}{% endblock %}
+</main>
+
+{% block footer %}{% include "partials/footer.html" %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, status_badge, pagination %}
+{% block title %}Users{% endblock %}
+{% block page_id %}admin-users{% endblock %}
+{% block page_module %}admin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ "Users" if is_sys else "Doctors & staff" }}</h1><p>{% if is_sys %}Every account in CDHRS.{% else %}Accounts at your hospital. Doctors can't register themselves; create their accounts here.{% endif %}</p></div>
+  <div class="form-actions" style="margin:0">
+    <button type="button" class="btn btn-primary" data-open-modal="account-modal" data-kind="doctor">{{ icon("plus") }}Create doctor</button>
+    <button type="button" class="btn" data-open-modal="account-modal" data-kind="staff">{{ icon("plus") }}Create staff</button>
+    {% if is_sys %}<button type="button" class="btn" data-open-modal="account-modal" data-kind="hospital_admin">{{ icon("plus") }}Create hospital admin</button>{% endif %}
+  </div>
+</div>
+
+<section class="card card-flush">
+  <form class="filters" method="get" role="search" aria-label="Filter users">
+    <div class="field grow"><label for="uq">Search</label><input class="input" id="uq" type="search" name="q" value="{{ filters.q }}" placeholder="Name, email or username" maxlength="80"></div>
+    <div class="field"><label for="ur">Role</label><select class="select" id="ur" name="role" data-autosubmit><option value="">All roles</option>{% for v, l in role_filters %}<option value="{{ v }}" {% if filters.role == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="us">Status</label><select class="select" id="us" name="status" data-autosubmit><option value="">Any</option>{% for s in ("active","pending","inactive") %}<option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="uv">Licence</label><select class="select" id="uv" name="verification" data-autosubmit><option value="">Any</option>{% for s in ("verified","pending","rejected") %}<option value="{{ s }}" {% if filters.verification == s %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}</select></div>
+    <button class="btn" type="submit">{{ icon("filter") }}Filter</button>
+  </form>
+  {% if page.items %}
+  <div class="table-wrap"><table class="table stack">
+    <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Hospital</th><th scope="col">Status</th><th scope="col">Last sign-in</th></tr></thead>
+    <tbody>
+    {% for u in page.items %}
+    <tr>
+      <td data-label="Name"><a href="/admin/users/{{ u.user_id }}"><strong>{{ u.full_name }}</strong></a><div class="small muted">{{ u.email }}</div></td>
+      <td data-label="Role">
+        {% if u.system_admin %}System admin{% elif u.hospital_admin %}Hospital admin{% elif u.doctor %}{{ u.doctor.designation }}<div class="small muted">{{ u.doctor.specialization }}</div>{% elif u.staff %}{{ u.staff.position }}{% elif u.patient %}Patient{% endif %}
+        {% if u.doctor %}{{ status_badge(u.doctor.verification_status.value) }}{% endif %}
+      </td>
+      <td data-label="Hospital">{{ (u.doctor or u.staff or u.hospital_admin).hospital.name if (u.doctor or u.staff or u.hospital_admin) else "—" }}</td>
+      <td data-label="Status">{{ status_badge(u.status.value) }}{% if u.locked_until and u.locked_until > now %} <span class="badge badge-danger">{{ icon("lock") }}Locked</span>{% endif %}</td>
+      <td data-label="Last sign-in" class="small">{{ u.last_login_at|dt }}</td>
+    </tr>
+    {% endfor %}
+    </tbody></table></div>
+  {{ pagination(page, "/admin/users?q=" ~ (filters.q|urlencode) ~ "&role=" ~ filters.role ~ "&status=" ~ filters.status ~ "&verification=" ~ filters.verification) }}
+  {% else %}
+  <div class="empty">{{ icon("users") }}<h2>No accounts match</h2><p>Change the filters or create a new account.</p></div>
+  {% endif %}
+</section>
+{% set default_kind = open_new %}{% set fixed_hospital = none %}
+{% include "admin/_account_modal.html" %}
+<span hidden data-auto-open="{{ 'account-modal' if open_new }}" data-auto-kind="{{ open_new }}"></span>
+{% endblock %}

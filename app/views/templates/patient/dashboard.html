@@ -1,0 +1,83 @@
+{% extends "layouts/portal.html" %}
+{% from "partials/macros.html" import icon, copy_button, visibility_badge %}
+{% block title %}Overview{% endblock %}
+{% block page_id %}patient-dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Hello, {{ cu.user.full_name.split(" ")[0] }}</h1>
+    <p>Here's what's happening with your records.</p>
+  </div>
+  <a class="btn btn-primary" href="/patient/records/new">{{ icon("upload") }}Upload a document</a>
+</div>
+
+{% if d.pending_requests %}
+<div class="alert alert-warning" role="status">{{ icon("key") }}<p><strong>{{ d.pending_requests }} doctor{{ "s" if d.pending_requests != 1 }} asked to see your private records.</strong> <a href="/patient/consent">Review request{{ "s" if d.pending_requests != 1 }}</a></p></div>
+{% endif %}
+{% if d.emergency_30d %}
+<div class="alert alert-emergency" role="status">{{ icon("siren") }}<p><strong>Emergency access was used on your records in the last 30 days.</strong> <a href="/patient/access-history?emergency=1">See who and why</a></p></div>
+{% endif %}
+
+<section class="dash-hero" aria-label="Your patient ID and summary">
+  <div class="health-card" data-reveal="scale">
+    <div class="hc-top">
+      <div>
+        <p class="hc-name">{{ cu.user.full_name }}</p>
+        <p class="hc-sub">CDHRS patient since {{ patient.created_at|d }}</p>
+      </div>
+      <span class="hc-chip">{{ icon("lock" if patient.profile_visibility.value == "private" else "globe") }}Profile {{ patient.profile_visibility.value }}</span>
+    </div>
+    <div>
+      <div class="hc-label" id="upi-label">Unique Patient ID</div>
+      <div class="hc-upi"><span class="upi" aria-labelledby="upi-label">{{ patient.upi }}</span>{{ copy_button(patient.upi, "Copy your patient ID") }}</div>
+    </div>
+    <div class="hc-meta">
+      <div><span>Blood group</span><strong>{{ "Not set" if patient.blood_group.value == "unknown" else patient.blood_group.value }}</strong></div>
+      <div><span>Date of birth</span><strong>{{ patient.date_of_birth|d }}</strong></div>
+    </div>
+  </div>
+  <div class="stat-grid" data-stagger>
+    <div class="stat"><div class="stat-label">{{ icon("file") }}Records</div><div class="stat-value" data-count="{{ d.total }}">{{ d.total }}</div><div class="stat-foot">{{ d.public }} public · {{ d.private }} private</div></div>
+    <div class="stat"><div class="stat-label">{{ icon("key") }}Active consents</div><div class="stat-value" data-count="{{ d.active_consents }}">{{ d.active_consents }}</div><div class="stat-foot">Doctors who can see private records now</div></div>
+    <div class="stat"><div class="stat-label">{{ icon("history") }}Accesses (30 days)</div><div class="stat-value" data-count="{{ d.accesses_30d }}">{{ d.accesses_30d }}</div><div class="stat-foot"><a href="/patient/access-history">See access history</a></div></div>
+    <div class="stat {{ 'is-alert' if d.emergency_30d }}"><div class="stat-label">{{ icon("siren") }}Emergency accesses</div><div class="stat-value" data-count="{{ d.emergency_30d }}">{{ d.emergency_30d }}</div><div class="stat-foot">Last 30 days</div></div>
+  </div>
+</section>
+
+<div class="grid-main-side">
+  <section class="card card-flush" aria-labelledby="recent-h">
+    <div class="card-header"><h2 id="recent-h">Recent records</h2><a class="btn btn-sm btn-ghost" href="/patient/records">View all</a></div>
+    {% if d.recent_records %}
+    <ul class="record-list">
+      {% for r in d.recent_records %}
+      <li class="record-row">
+        <span class="ri">{{ icon("file") }}</span>
+        <div class="rt"><a href="/patient/records/{{ r.information_id }}">{{ r.title }}</a>
+          <div class="rm"><span>{{ r.information_type.value|humanize }}</span><span>{{ r.information_date|d }}</span><span>Uploaded by {{ author(r) }}</span></div></div>
+        <div class="rb">{{ visibility_badge(r.visibility.value) }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty">{{ icon("file") }}<h2>No records yet</h2><p>Upload a prescription, lab report or scan to start your history.</p><a class="btn btn-primary" href="/patient/records/new">Upload a document</a></div>
+    {% endif %}
+  </section>
+
+  <section class="card" aria-labelledby="access-h">
+    <div class="card-header"><h2 id="access-h">Who looked recently</h2></div>
+    {% if d.recent_access %}
+    <ul class="timeline">
+      {% for a in d.recent_access %}
+      <li class="{{ 'is-archived' if a.emergency_access_id }}">
+        <strong>{{ a.user.full_name }}</strong>{% if a.emergency_access_id %} <span class="badge badge-emergency">Emergency</span>{% endif %}
+        <div class="small muted">{{ access_labels[a.access_type] }}</div>
+        <div class="when">{{ a.accessed_at|dt }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted small">Nobody else has opened your records yet. When a doctor does, it shows up here.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
