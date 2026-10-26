@@ -9,11 +9,27 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 
+def _from_dotenv(name: str) -> str | None:
+    """Read one value from the project's .env (pytest doesn't load .env into the environment)."""
+    from pathlib import Path
+
+    env = Path(__file__).resolve().parent.parent / ".env"
+    if not env.exists():
+        return None
+    for line in env.read_text(encoding="utf-8").splitlines():
+        key, sep, value = line.partition("=")
+        if sep and key.strip() == name and not line.lstrip().startswith("#"):
+            return value.strip().strip('"').strip("'") or None
+    return None
+
+
 os.environ["APP_ENV"] = "test"
 os.environ["COOKIE_SECURE"] = "false"
 os.environ["REDIS_URL"] = ""
-os.environ["DATABASE_URL"] = os.environ.get(
-    "TEST_DATABASE_URL", "mysql+pymysql://cdhrs:cdhrs_dev_pw@127.0.0.1:3306/cdhrs_test?charset=utf8mb4"
+os.environ["DATABASE_URL"] = (
+    os.environ.get("TEST_DATABASE_URL")
+    or _from_dotenv("TEST_DATABASE_URL")
+    or "mysql+pymysql://cdhrs:cdhrs_dev_pw@127.0.0.1:3306/cdhrs_test?charset=utf8mb4"
 )
 os.environ.setdefault("SECRET_KEY", "test-secret-key-test-secret-key-test-secret-key")
 os.environ["UPLOAD_DIR"] = "storage/test-uploads"
@@ -29,7 +45,7 @@ import app.models  # noqa: E402,F401
 from app.services.common.kvstore import kv  # noqa: E402
 from app.services.common.seed import DEMO_PASSWORD, seed_demo, seed_rbac, seed_settings  # noqa: E402
 
-assert "cdhrs_test" in settings.database_url or os.environ.get("TEST_DATABASE_URL"), "refusing to run tests against a non-test DB"
+assert "test" in settings.database_url.rsplit("/", 1)[-1], "refusing to run tests against a database whose name has no 'test' in it"
 
 
 @pytest.fixture(scope="session", autouse=True)
