@@ -211,6 +211,7 @@ class ApprovalStarted:
     consent_id: int
     expires_in: int
     sent_to: str
+    demo_code: str | None = None
 
 
 def approve(db: Session, *, patient: Patient, request_id: int, duration_hours: int, ip: str) -> ApprovalStarted:
@@ -237,7 +238,8 @@ def approve(db: Session, *, patient: Patient, request_id: int, duration_hours: i
     issued = otp_service.issue(db, consent.consent_id, patient.user.phone, context="approve record access")
     audit(db, action="consent.approved_pending_otp", entity="consent", entity_id=consent.consent_id, user_id=patient.user_id, ip=ip,
           details={"doctor_id": req.doctor_id, "duration_hours": duration_hours})
-    return ApprovalStarted(consent_id=consent.consent_id, expires_in=issued.expires_in, sent_to=issued.sent_to)
+    return ApprovalStarted(consent_id=consent.consent_id, expires_in=issued.expires_in, sent_to=issued.sent_to,
+                           demo_code=issued.demo_code)
 
 
 def _own_consent(db: Session, patient: Patient, consent_id: int) -> Consent:

@@ -32,6 +32,7 @@ class OtpIssued:
     otp_id: int
     expires_in: int
     sent_to: str  # masked phone
+    demo_code: str | None = None  # only in DEMO_MODE: shown on screen instead of a real SMS
 
 
 def _hash(consent_id: int, code: str) -> str:
@@ -66,7 +67,8 @@ def issue(db: Session, consent_id: int, phone: str, *, context: str) -> OtpIssue
     result = get_sms_provider().send(phone, f"CDHRS: your code to {context} is {code}. It expires in {minutes} min. Never share it.")
     if not result.ok:
         raise OtpError("We couldn't send the SMS code. Try again in a minute.", 502)
-    return OtpIssued(otp_id=otp.otp_id, expires_in=settings.otp_ttl_seconds, sent_to=mask_phone(phone))
+    return OtpIssued(otp_id=otp.otp_id, expires_in=settings.otp_ttl_seconds, sent_to=mask_phone(phone),
+                     demo_code=code if settings.demo_mode else None)
 
 
 def verify(db: Session, consent_id: int, code: str) -> None:

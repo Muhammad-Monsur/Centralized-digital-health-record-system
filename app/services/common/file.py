@@ -7,6 +7,8 @@
   used for display / the download filename.
 * Files live outside the static folder, so they can only be fetched through an
   authorised endpoint.
+* With FILE_STORAGE=database every document is also stored in MySQL (``stored_file_blob``),
+  so it survives hosts without a persistent disk; the upload folder is then only a cache.
 """
 from __future__ import annotations
 
@@ -18,8 +20,68 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from fastapi import UploadFile
+from sqlalchemy import Column, DateTime, LargeBinary, MetaData, String, Table, delete, func, insert, select
+from sqlalchemy.dialects.mysql import LONGBLOB
 
 from app.config import settings
+
+# Kept out of the models' metadata on purpose: the JSON backup already carries the documents
+# as files, so the backup must not serialise this table's binary column as well.
+_blob_metadata = MetaData()
+BLOBS = Table(
+    "stored_file_blob", _blob_metadata,
+    Column("stored_name", String(48), primary_key=True),
+    Column("data", LargeBinary().with_variant(LONGBLOB(), "mysql"), nullable=False),
+    Column("created_at", DateTime, server_default=func.now(), nullable=False),
+)
+
+
+def _db_enabled() -> bool:
+    return settings.file_storage == "database"
+
+
+def _engine():
+    from app.database import engine  # late import: app.database imports settings only
+
+    return engine
+
+
+def store_blob(stored_name: str, data: bytes) -> None:
+    """Keep a copy of a document in the database (FILE_STORAGE=database)."""
+    if not _db_enabled():
+        return
+    with _engine().begin() as conn:
+        conn.execute(delete(BLOBS).where(BLOBS.c.stored_name == stored_name))
+        conn.execute(insert(BLOBS).values(stored_name=stored_name, data=data))
+
+
+def _restore_from_db(stored_name: str, path: Path) -> bool:
+    with _engine().connect() as conn:
+        data = conn.scalar(select(BLOBS.c.data).where(BLOBS.c.stored_name == stored_name))
+    if data is None:
+        return False
+    settings.upload_dir.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + f".{secrets.token_hex(4)}.tmp")
+    tmp.write_bytes(data)
+    os.chmod(tmp, 0o640)
+    os.replace(tmp, path)
+    return True
+
+
+def cache_all_from_db() -> int:
+    """Write every database-stored document into the upload folder (before a backup)."""
+    if not _db_enabled():
+        return 0
+    with _engine().connect() as conn:
+        names = list(conn.scalars(select(BLOBS.c.stored_name)))
+    n = 0
+    for name in names:
+        try:
+            resolve(name)
+            n += 1
+        except FileError:
+            pass
+    return n
 
 # extension -> (mime, list of acceptable leading signatures)
 ALLOWED: dict[str, tuple[str, list[bytes]]] = {
@@ -107,6 +169,12 @@ async def save_upload(upload: UploadFile) -> StoredFile:
     if size < 32:
         target.unlink(missing_ok=True)
         raise FileError("The file is empty or damaged.")
+    if _db_enabled():
+        try:
+            store_blob(stored, target.read_bytes())
+        except Exception:
+            target.unlink(missing_ok=True)
+            raise
     return StoredFile(stored_name=stored, original_name=original, mime=mime, size=size)
 
 
@@ -115,17 +183,21 @@ def resolve(stored_name: str) -> Path:
     if not re.fullmatch(r"[0-9a-f]{32}\.(pdf|png|jpg|jpeg|webp)", stored_name or ""):
         raise FileError("File not found.")
     path = (settings.upload_dir / stored_name).resolve()
-    if path.parent != settings.upload_dir.resolve() or not path.is_file():
+    if path.parent != settings.upload_dir.resolve():
+        raise FileError("File not found.")
+    if not path.is_file() and not (_db_enabled() and _restore_from_db(stored_name, path)):
         raise FileError("File not found.")
     return path
 
 
 def delete_quietly(stored_name: str | None) -> None:
     if stored_name:
-        try:
-            resolve(stored_name).unlink(missing_ok=True)
-        except FileError:
-            pass
+        if _db_enabled() and re.fullmatch(r"[0-9a-f]{32}\.(pdf|png|jpg|jpeg|webp)", stored_name):
+            with _engine().begin() as conn:
+                conn.execute(delete(BLOBS).where(BLOBS.c.stored_name == stored_name))
+        path = settings.upload_dir / stored_name
+        if re.fullmatch(r"[0-9a-f]{32}\.(pdf|png|jpg|jpeg|webp)", stored_name) and path.is_file():
+            path.unlink(missing_ok=True)
 
 
 def human_size(n: int | None) -> str:

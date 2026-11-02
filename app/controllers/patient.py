@@ -255,8 +255,11 @@ def api_approve(request_id: int, body: ApproveIn, request: Request, db: Session 
     except (consent_service.ConsentError, consent_service.otp_service.OtpError) as e:
         db.rollback()
         return _err(e)
-    return {"consent_id": started.consent_id, "expires_in": started.expires_in, "sent_to": started.sent_to,
-            "detail": f"We sent a 6-digit code to {started.sent_to}."}
+    out = {"consent_id": started.consent_id, "expires_in": started.expires_in, "sent_to": started.sent_to,
+           "detail": f"We sent a 6-digit code to {started.sent_to}."}
+    if started.demo_code:  # DEMO_MODE only: no real SMS is sent
+        out["demo_code"] = started.demo_code
+    return out
 
 
 @api.post("/patient/consent/{consent_id}/verify", summary="Confirm approval with the SMS code")
@@ -280,7 +283,10 @@ def api_resend(consent_id: int, request: Request, db: Session = Depends(get_db),
     except (consent_service.ConsentError, consent_service.otp_service.OtpError) as e:
         db.rollback()
         return _err(e)
-    return {"detail": f"New code sent to {issued.sent_to}.", "expires_in": issued.expires_in}
+    out = {"detail": f"New code sent to {issued.sent_to}.", "expires_in": issued.expires_in}
+    if issued.demo_code:  # DEMO_MODE only: no real SMS is sent
+        out["demo_code"] = issued.demo_code
+    return out
 
 
 @api.post("/patient/consent/requests/{request_id}/reject", summary="Decline an access request")

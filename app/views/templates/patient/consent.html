@@ -53,6 +53,7 @@
       </div>
       <p class="error" data-error-for="code" role="alert"></p>
       <p class="hint small muted" data-otp-hint>The code expires in 5 minutes and works once.</p>
+      {% if settings.demo_mode %}<p class="alert alert-info small" data-demo-code hidden role="status"></p>{% endif %}
     </form>
   </article>
   {% else %}

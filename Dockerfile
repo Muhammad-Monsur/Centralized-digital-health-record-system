@@ -20,8 +20,9 @@ COPY --from=assets --chown=cdhrs:cdhrs /src/app/static/dist app/static/dist
 RUN mkdir -p storage/uploads storage/backups && chown -R cdhrs:cdhrs storage
 USER cdhrs
 EXPOSE 8000
-HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/healthz',timeout=2)"
+HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD python -c "import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:%s/healthz' % os.environ.get('PORT', '8000'),timeout=2)"
 # --proxy-headers: trust X-Forwarded-For/Proto only from private-network proxies (the nginx
 # container on the compose network). The app port itself is never published.
+# On Railway the start command is scripts/railway_start.sh (see railway.json), and $PORT is set by Railway.
 ENV FORWARDED_ALLOW_IPS="127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-2} --proxy-headers --forwarded-allow-ips=\"$FORWARDED_ALLOW_IPS\" --no-server-header"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-2} --proxy-headers --forwarded-allow-ips=\"$FORWARDED_ALLOW_IPS\" --no-server-header"]

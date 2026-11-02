@@ -125,6 +125,26 @@ def test_upload_pdf_and_download(client, db):
     assert [h.change_type.value for h in hist] == ["created"]
 
 
+def test_database_file_storage_survives_losing_the_disk(client, db, monkeypatch):
+    """FILE_STORAGE=database: a document still downloads after the upload folder is wiped
+    (free cloud hosts have no persistent disk), and backups still include it."""
+    from app.config import settings
+    from app.services.common import file as file_service
+
+    monkeypatch.setattr(settings, "file_storage", "database")
+    client.login("patient3")
+    r = _upload(client, PDF, "scan.pdf")
+    assert r.status_code == 201, r.text
+    info = db.get(MedicalInformation, r.json()["id"])
+    (settings.upload_dir / info.file_path).unlink()            # the host restarted: disk is empty
+    d = client.get(f"/patient/records/{info.information_id}/file")
+    assert d.status_code == 200 and d.content == PDF           # served from MySQL, cached again
+    assert (settings.upload_dir / info.file_path).is_file()
+    (settings.upload_dir / info.file_path).unlink()
+    assert file_service.cache_all_from_db() >= 1               # what a backup does first
+    assert (settings.upload_dir / info.file_path).is_file()
+
+
 def test_upload_rejects_disguised_file(client):
     client.login("patient3")
     r = _upload(client, b"MZ\x90\x00 this is an exe" + b"0" * 50, "report.pdf")
@@ -232,6 +252,26 @@ def test_consent_full_flow_with_otp_and_revoke(client, db):
     assert r.status_code == 200
     db.rollback(); db.expire_all()  # fresh snapshot + drop cached objects
     assert db.get(Consent, consent_id).status == ConsentStatus.REVOKED
+
+
+def test_demo_mode_returns_the_code_on_screen_only_in_demo_mode(client, db, monkeypatch):
+    from app.config import settings
+
+    req = _new_request(db, "dr.hasan", "patient2")
+    client.login("patient2")
+    r = client.api("POST", f"/api/v1/patient/consent/requests/{req.request_id}/approve", json={"duration_hours": 1})
+    assert r.status_code == 200 and "demo_code" not in r.json()   # normal mode: never in the response
+    client.api("POST", f"/api/v1/patient/consent/requests/{req.request_id}/reject")
+
+    monkeypatch.setattr(settings, "demo_mode", True)
+    req = _new_request(db, "dr.akter", "patient2")
+    r = client.api("POST", f"/api/v1/patient/consent/requests/{req.request_id}/approve", json={"duration_hours": 1})
+    assert r.status_code == 200 and r.json()["demo_code"] == _last_code()
+    assert "Demo site" in client.get("/patient/consent").text   # banner on every page
+    consent_id = r.json()["consent_id"]
+    r = client.api("POST", f"/api/v1/patient/consent/{consent_id}/verify", json={"code": r.json()["demo_code"]})
+    assert r.status_code == 200, r.text
+    client.api("POST", f"/api/v1/patient/consent/{consent_id}/revoke")
 
 
 def test_otp_attempt_limit_burns_code(client, db):

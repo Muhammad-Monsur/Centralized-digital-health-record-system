@@ -4,6 +4,14 @@ import { confirmDialog, toast } from "../core/ui.js";
 import { setLoading } from "../core/forms.js";
 import { $ } from "../core/util.js";
 
+// DEMO_MODE only: the server returns the code instead of texting it, and we show it here.
+function showDemoCode(card, code) {
+  const slot = $("[data-demo-code]", card);
+  if (!slot || !code) return;
+  slot.textContent = `Demo site: no SMS is sent. Your code is ${code}.`;
+  slot.hidden = false;
+}
+
 function showOtp(card, consentId) {
   card.dataset.consent = consentId;
   $("[data-answer-step]", card).hidden = true;
@@ -23,6 +31,7 @@ export default function init() {
         const res = await post(`/api/v1/patient/consent/requests/${approve.dataset.approve}/approve`, { duration_hours: hours });
         toast(res.detail, "success");
         showOtp(card, res.consent_id);
+        showDemoCode(card, res.demo_code);
       } catch (err) {
         toast(err.message, "error");
       } finally {
@@ -38,6 +47,7 @@ export default function init() {
       try {
         const res = await post(`/api/v1/patient/consent/${card.dataset.consent}/resend`);
         toast(res.detail, "success");
+        showDemoCode(card, res.demo_code);
       } catch (err) {
         toast(err.message, "error");
       } finally {

@@ -1,0 +1,43 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> pick this repository.
+# You will be asked for DATABASE_URL once: paste the Aiven MySQL "Service URI".
+services:
+  - type: web
+    name: cdhrs
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerCommand: sh scripts/start.sh
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: cdhrs-redis
+          property: connectionString
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SMS_PROVIDER
+        value: console
+      - key: FILE_STORAGE
+        value: database
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"
+      - key: WEB_CONCURRENCY
+        value: "1"
+
+  - type: keyvalue
+    name: cdhrs-redis
+    plan: free
+    region: singapore
+    ipAllowList: []          # private network only
+    maxmemoryPolicy: noeviction

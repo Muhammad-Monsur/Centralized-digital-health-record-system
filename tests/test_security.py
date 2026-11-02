@@ -263,6 +263,51 @@ def test_production_guard_lists_unsafe_settings(monkeypatch):
     assert any("REDIS_URL" in p for p in problems) and any("COOKIE_SECURE" in p for p in problems)
 
 
+def test_console_sms_in_production_only_allowed_in_demo_mode(monkeypatch):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "sms_provider", "console")
+    monkeypatch.setattr(settings, "demo_mode", False)
+    assert any("SMS_PROVIDER" in p for p in settings.production_problems())
+    monkeypatch.setattr(settings, "demo_mode", True)
+    assert not any("SMS_PROVIDER" in p for p in settings.production_problems())
+
+
+def test_api_docs_default_off_in_production_but_on_for_a_demo():
+    from app.config import Settings
+
+    base = dict(_env_file=None, secret_key="x" * 40, app_env="production")
+    assert Settings(**base).api_docs_enabled is False
+    assert Settings(**base, demo_mode=True).api_docs_enabled is True
+    assert Settings(**base, demo_mode=True, enable_api_docs=False).api_docs_enabled is False
+
+
+def test_mysql_ssl_mode_from_url_and_private_redis():
+    import ssl
+
+    from app.config import Settings
+
+    base = dict(_env_file=None, secret_key="Zq8v-3kLm9PwXr2tYb7NcJf5Hd1GsAeU0oViKx", app_env="production",
+                cookie_secure=True, demo_mode=True)
+    s = Settings(**base, database_url="mysql://avnadmin:pw@db.aivencloud.com:12345/defaultdb?ssl-mode=REQUIRED")
+    assert s.database_url == "mysql+pymysql://avnadmin:pw@db.aivencloud.com:12345/defaultdb?charset=utf8mb4"
+    ctx = s.db_connect_args()["ssl"]
+    assert isinstance(ctx, ssl.SSLContext) and ctx.verify_mode == ssl.CERT_NONE   # encrypted, like MySQL's REQUIRED
+    assert Settings(**base, database_url="mysql://u:p@h/db").db_connect_args() == {}
+    # Render's private-network Redis has no password; a public host still needs one
+    assert not any("REDIS_URL" in p for p in Settings(**base, redis_url="redis://red-abc123:6379").production_problems())
+    assert any("REDIS_URL" in p for p in Settings(**base, redis_url="redis://cache.example.com:6379").production_problems())
+
+
+def test_plain_mysql_url_from_hosting_provider_is_accepted():
+    from app.config import Settings
+
+    s = Settings(secret_key="x" * 40, database_url="mysql://root:pw@mysql.railway.internal:3306/railway")
+    assert s.database_url == "mysql+pymysql://root:pw@mysql.railway.internal:3306/railway?charset=utf8mb4"
+    s = Settings(secret_key="x" * 40, database_url="mysql+pymysql://u:p@h/db?charset=utf8mb4")
+    assert s.database_url == "mysql+pymysql://u:p@h/db?charset=utf8mb4"
+
+
 def test_restore_keeps_newer_audit_history(db):
     a = make_client()
     a.login("sysadmin")

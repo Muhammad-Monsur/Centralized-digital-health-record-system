@@ -22,7 +22,7 @@ Team: Abdullah Al Mahmud (Project Manager) · Md. Monsur (Team Lead) · Tahia Is
 8. [Security measures](#8-security-measures)
 9. [Database schema and additions](#9-database-schema)
 10. [Performance](#10-performance)
-11. [Deployment (Docker, load balancer, HTTPS, CDN)](#11-deployment)
+11. [Deployment (Docker, load balancer, HTTPS, CDN, Render)](#11-deployment)
 12. [Plugging in a real SMS provider](#12-plugging-in-a-real-sms-provider)
 13. [Backups](#13-backups)
 14. [API](#14-api)
@@ -302,6 +302,33 @@ nobody is signed out when an instance stops.
 On a VPS without Docker: run `uvicorn app.main:app --workers 4 --proxy-headers
 --forwarded-allow-ips=127.0.0.1` on ports 8001–8003 (systemd), and use `nginx.conf` with the
 upstream servers changed to `127.0.0.1:8001` etc.
+
+### Free public demo on Render (with Aiven MySQL)
+
+`render.yaml` is a Render Blueprint: it creates the web service (from the `Dockerfile`, started by
+`scripts/start.sh`, which migrates, seeds and serves on `$PORT`) and a free Redis-compatible
+Key Value instance on Render's private network.
+
+1. **Database (Aiven, free MySQL):** create an account at aiven.io, then **Create service → MySQL →
+   Free plan**. When it is running, copy the **Service URI** from the overview page
+   (`mysql://avnadmin:…@….aivencloud.com:…/defaultdb?ssl-mode=REQUIRED`).
+2. **Render:** sign in to render.com with GitHub, then **New → Blueprint**, pick this repository and
+   the branch to deploy. Render shows the two services from `render.yaml`.
+3. When asked for `DATABASE_URL`, paste the Aiven Service URI, then **Apply**.
+4. Wait for the first deploy (5 to 10 minutes): the log ends with "Application startup complete".
+   Open the `https://cdhrs-….onrender.com` address shown on the service page.
+
+What the Blueprint sets: `APP_ENV=production`, `DEMO_MODE=true` (fictional demo accounts with
+password `Demo@12345`, SMS codes shown on screen, demo banner), a generated `SECRET_KEY`,
+`FILE_STORAGE=database` (documents are kept in MySQL because the free plan has no persistent
+disk), and `BASE_URL` from Render's own address. The `?ssl-mode=REQUIRED` in the Aiven URI turns
+on TLS to the database; to also verify Aiven's certificate set `DB_SSL_MODE=VERIFY_CA` and paste
+the CA certificate from Aiven into `DB_SSL_CA`.
+
+Free-plan behaviour: the site sleeps after 15 minutes without visitors and takes about a minute to
+wake up; the free Key Value store is not persistent, so a restart signs everyone out (data in
+MySQL is kept). Backups made from the System admin portal are stored on the instance's disk and
+are lost on a restart; download or copy them if you need them.
 
 ### CDN for static assets
 
