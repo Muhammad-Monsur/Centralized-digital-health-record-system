@@ -14,7 +14,7 @@ def get_sms_provider() -> SMSProvider:
         from app.services.common.sms.http_provider import build
 
         return build()
-    if settings.is_production:
+    if settings.is_production and not settings.demo_mode:
         raise RuntimeError("SMS_PROVIDER=console is not allowed in production; configure a real provider.")
     from app.services.common.sms.console import ConsoleSMSProvider
 
