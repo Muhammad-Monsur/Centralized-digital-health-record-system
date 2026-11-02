@@ -34,6 +34,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import Base, engine
 from app.services.common import cache
+from app.services.common import file as file_service
 from app.services.common.audit import audit
 from app.services.common.kvstore import kv
 from app.services.common.security import utcnow
@@ -102,6 +103,7 @@ def create_backup(db: Session, user_id: int | None, ip: str | None = None, label
                 data[t.name] = rows
                 counts[t.name] = len(rows)
     payload = json.dumps(data, default=_json_default, separators=(",", ":")).encode()
+    file_service.cache_all_from_db()  # FILE_STORAGE=database: make sure every document is on disk
     files = sorted(p for p in settings.upload_dir.glob("*") if p.is_file() and _UPLOAD_RE.match(f"uploads/{p.name}"))
     manifest = {
         "format": FORMAT_VERSION, "app": "cdhrs", "created_at": utcnow().isoformat() + "Z", "revision": revision,
@@ -233,9 +235,11 @@ def restore_backup(db: Session, name: str, user_id: int | None, ip: str | None =
                 if src is None:
                     continue
                 target = settings.upload_dir / Path(member.name).name
+                blob = src.read()
                 with open(target, "wb") as out:
-                    out.write(src.read())
+                    out.write(blob)
                 os.chmod(target, 0o640)
+                file_service.store_blob(target.name, blob)
                 restored_files += 1
 
     # Everyone signs in again against the restored accounts; caches are stale now.

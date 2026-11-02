@@ -36,6 +36,7 @@
 <body data-page="{% block page_id %}{% endblock %}" data-module="{% block page_module %}{% endblock %}" class="{% block body_class %}{% endblock %}">
   {% include "partials/icons.html" %}
   <a class="skip-link" href="#main">Skip to main content</a>
+  {% if settings.demo_mode %}<div class="banner-system banner-demo" role="note">Demo site: all hospitals, people and records are fictional, and SMS codes are shown on screen instead of being texted.</div>{% endif %}
   <div class="scroll-progress" aria-hidden="true"></div>
   <div class="route-loader" aria-hidden="true"></div>
   {% block body %}{% endblock %}

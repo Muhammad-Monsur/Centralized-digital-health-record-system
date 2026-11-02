@@ -18,8 +18,8 @@ def main() -> int:
     parser.add_argument("--demo", action="store_true", help="also create demo data")
     args = parser.parse_args()
 
-    if args.demo and settings.is_production:
-        print("Refusing to create demo accounts with APP_ENV=production.", file=sys.stderr)
+    if args.demo and settings.is_production and not settings.demo_mode:
+        print("Refusing to create demo accounts with APP_ENV=production (set DEMO_MODE=true for a public demo).", file=sys.stderr)
         return 1
 
     with SessionLocal() as db:

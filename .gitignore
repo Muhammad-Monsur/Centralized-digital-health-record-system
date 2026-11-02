@@ -13,3 +13,4 @@ node_modules/
 app/static/dist/
 reports/
 storage/test-*/
+dump.rdb

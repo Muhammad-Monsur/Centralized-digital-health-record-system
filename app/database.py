@@ -47,6 +47,7 @@ def make_engine(url: str | None = None):
         pool_pre_ping=True,
         echo=settings.sql_echo,
         future=True,
+        connect_args=settings.db_connect_args(),
     )
 
     @event.listens_for(eng, "connect")

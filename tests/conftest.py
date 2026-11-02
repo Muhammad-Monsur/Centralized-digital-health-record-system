@@ -59,6 +59,7 @@ def _database() -> Iterator[dict[str, str]]:
         conn.execute(text("SET FOREIGN_KEY_CHECKS=0"))
         Base.metadata.drop_all(conn)
         conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        conn.execute(text("DROP TABLE IF EXISTS stored_file_blob"))  # not in the models' metadata
         conn.execute(text("SET FOREIGN_KEY_CHECKS=1"))
     # Build the schema through the real migrations (proves they match the models).
     from app.config import BASE_DIR
