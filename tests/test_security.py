@@ -299,6 +299,27 @@ def test_mysql_ssl_mode_from_url_and_private_redis():
     assert any("REDIS_URL" in p for p in Settings(**base, redis_url="redis://cache.example.com:6379").production_problems())
 
 
+def test_console_sms_provider_works_in_a_production_demo(monkeypatch):
+    """A public demo (APP_ENV=production, DEMO_MODE=true) must still be able to issue consent codes."""
+    import pytest
+
+    from app.config import settings
+    from app.services.common import sms
+
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "sms_provider", "console")
+    monkeypatch.setattr(settings, "demo_mode", False)
+    sms.get_sms_provider.cache_clear()
+    try:
+        with pytest.raises(RuntimeError):
+            sms.get_sms_provider()
+        monkeypatch.setattr(settings, "demo_mode", True)
+        sms.get_sms_provider.cache_clear()
+        assert sms.get_sms_provider().name == "console"
+    finally:
+        sms.get_sms_provider.cache_clear()
+
+
 def test_plain_mysql_url_from_hosting_provider_is_accepted():
     from app.config import Settings
 
